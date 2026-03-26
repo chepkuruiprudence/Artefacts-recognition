@@ -1,13 +1,145 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
+// Database provider
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  name          String
+  password      String
+  role          UserRole    @default(USER)
+  verified      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  artefacts     Artefact[]
+  
+  @@map("users")
+}
+
+model Artefact {
+  id                    String              @id @default(uuid())
+  name                  String
+  category              ArtefactCategory
+  era                   String
+  description           String              @db.Text
+  culturalSignificance  String?             @db.Text
+  materials             String[]
+  region                String?
+  verificationStatus    VerificationStatus  @default(PENDING)
+  views                 Int                 @default(0)
+  tags                  String[]
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  // Dimensions (stored as JSON)
+  dimensions            Json?
+  
+  // Relations
+  contributorId         String?
+  contributor           User?               @relation(fields: [contributorId], references: [id])
+  images                ArtefactImage[]
+  
+  @@map("artefacts")
+  @@index([category])
+  @@index([verificationStatus])
+}
+
+model ArtefactImage {
+  id          String    @id @default(uuid())
+  url         String
+  caption     String?
+  isPrimary   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  artefactId  String
+  artefact    Artefact  @relation(fields: [artefactId], references: [id], onDelete: Cascade)
+  
+  @@map("artefact_images")
+}
+
+model Contact {
+  id          String        @id @default(uuid())
+  name        String
+  email       String
+  subject     ContactSubject
+  message     String        @db.Text
+  status      ContactStatus @default(NEW)
+  response    String?       @db.Text
+  respondedAt DateTime?
+  ipAddress   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@map("contacts")
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Classification {
+  id              String    @id @default(uuid())
+  imagePath       String
+  topPrediction   String
+  confidence      Float
+  allPredictions  Json
+  processingTime  Float
+  createdAt       DateTime  @default(now())
+  
+  @@map("classifications")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  USER
+  CONTRIBUTOR
+  ADMIN
+}
+
+enum ArtefactCategory {
+  KIKUYU_SPEARS
+  KIKUYU_STOOLS
+  NON_ARTEFACTS
+  KIKUYU_BEADWORK
+  KIKUYU_WALKING_STICK
+  KIKUYU_POTS
+  KIKUYU_HUTS
+  KIKUYU_COMBS
+  KIKUYU_SHIELDS
+  KIKUYU_CALABASH
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ContactSubject {
+  GENERAL
+  CLASSIFICATION
+  CONTRIBUTION
+  PARTNERSHIP
+  TECHNICAL
+  OTHER
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }

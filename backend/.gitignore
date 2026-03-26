@@ -3,3 +3,20 @@ node_modules
 .env
 
 /generated/prisma
+
+/generated/prisma
+
+/generated/prisma
+
+/generated/prisma
+
+# Models
+src/assets/model/*.onnx
+dist/assets/model/*.onnx
+src/assets/model/*.h5
+dist/assets/model/*.h5
+
+
+# User Uploads
+uploads/
+dist/

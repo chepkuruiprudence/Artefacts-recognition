@@ -1,6 +1,10 @@
 import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+
+    const navigate = useNavigate();
+    
     return (
         <div style={{
             fontFamily: "'Inter', 'Segoe UI', sans-serif",
@@ -23,7 +27,7 @@ export default function Home() {
                 <div style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'url("C:\Users\USER\Desktop\Artefacts\frontend\src\assets\homepage.png") center/cover',
+                    background: 'url("/assets/homepage.png") center/cover',
                     opacity: 0.4
                 }}></div>
                 
@@ -58,27 +62,24 @@ export default function Home() {
                         Discover the rich history and traditions of Gĩkũyũ culture.
                     </p>
                     
-                    <button style={{
-                        backgroundColor: '#c9a87c',
-                        color: '#2c2420',
-                        padding: '1rem 2.5rem',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        width: 'fit-content',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(201, 168, 124, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#d4b890';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#c9a87c';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                    }}>
+                    <button 
+                        onClick={() => navigate('/classify')} // Redirect logic added here
+                        style={{
+                            backgroundColor: '#c9a87c',
+                            color: '#2c2420',
+                            padding: '1rem 2.5rem',
+                            // ... other styles ...
+                            cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#d4b890';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#c9a87c';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                    >
                         Start Your Heritage Journey
                     </button>
                 </div>

@@ -1,43 +1,69 @@
+// {
+//   // Visit https://aka.ms/tsconfig to read more about this file
+//   "compilerOptions": {
+//     // File Layout
+//     "rootDir": "./",
+//     "outDir": "./dist",
+
+//     // Environment Settings
+//     // See also https://aka.ms/tsconfig/module
+//     "module": "commonjs",
+//     "target": "esnext",
+//     "types": [],
+//     // For nodejs:
+//     // "lib": ["esnext"],
+//     // "types": ["node"],
+//     // and npm install -D @types/node
+
+//     // Other Outputs
+//     "sourceMap": true,
+//     "declaration": true,
+//     "declarationMap": true,
+
+//     // Stricter Typechecking Options
+//     "noUncheckedIndexedAccess": true,
+//     "exactOptionalPropertyTypes": false,
+
+//     // Style Options
+//     // "noImplicitReturns": true,
+//     // "noImplicitOverride": true,
+//     // "noUnusedLocals": true,
+//     // "noUnusedParameters": true,
+//     // "noFallthroughCasesInSwitch": true,
+//     // "noPropertyAccessFromIndexSignature": true,
+
+//     // Recommended Options
+//     "strict": true,
+//     "jsx": "react-jsx",
+//     "verbatimModuleSyntax": false,
+//     "isolatedModules": true,
+//     "noUncheckedSideEffectImports": true,
+//     "moduleDetection": "force",
+//     "skipLibCheck": true,
+//   }
+// }
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-     "rootDir": ".",
-     "outDir": "./dist",
-
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "commonjs",
     "target": "esnext",
-    "types": ["node"],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
-
-    // Other Outputs
+    "types": [],
     "sourceMap": true,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
-
-    // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
+    "exactOptionalPropertyTypes": false,
+    "emitDeclarationOnly":true,
+    "allowImportingTsExtensions": true,
     "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
