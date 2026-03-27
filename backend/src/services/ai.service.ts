@@ -15,19 +15,18 @@ class AIService {
   );
   private modelLoaded: boolean = false;
 
-  // Model class labels (must match training order)
-  private labels: string[] = [
-    'kikuyu spears',
-    'kikuyu stools',
-    'non artefacts',
-    'kikuyu beadwork',
-    'kikuyu walking stick',
-    'kikuyu pots',
-    'kikuyu huts',
-    'kikuyu combs',
-    'kikuyu shields',
-    'kikuyu calabash'
-  ];
+private labels: string[] = [
+  'kikuyu beadwork',      // 0
+  'kikuyu calabash',      // 1
+  'kikuyu combs',         // 2
+  'kikuyu huts',          // 3
+  'kikuyu pots',          // 4
+  'kikuyu shields',       // 5
+  'kikuyu spears',        // 6
+  'kikuyu stools',        // 7
+  'kikuyu walking stick', // 8
+  'non artefacts'         // 9
+];
 
   constructor() {
     this.initModel();
@@ -63,55 +62,43 @@ class AIService {
    * Preprocess image for model input
    * Converts image to normalized Float32Array
    */
+  /**
+   * Preprocess image for model input
+   * Converts image to normalized Float32Array (0.0 to 1.0) with BGR channel order
+   */
   private async preprocessImage(imagePath: string): Promise<Float32Array> {
     try {
-      /// ...existing code...
+      const { data } = await sharp(imagePath)
+        .resize(256, 256, { 
+          fit: 'fill',        // Matches Keras 'squash' resizing
+          kernel: 'linear'  // Matches Keras default interpolation
+        })
+        .removeAlpha()
+        .toColorspace('srgb') // Get standard RGB first
+        .raw()
+        .toBuffer({ resolveWithObject: true });
 
-// Resize to 256x256 and get raw pixel data
-const result = await sharp(imagePath)
-  .resize(256, 256, { 
-    fit: 'cover',
-    position: 'center'
-  })
-  .removeAlpha() // Remove alpha channel if present
-  .raw()
-  .toBuffer({ resolveWithObject: true });
+      if (!data) {
+        throw new Error('Failed to extract pixel data from image');
+      }
 
-// Ensure data and info are present (Sharp should provide them, but this satisfies TypeScript)
-if (!result.data || !result.info) {
-  throw new Error('Image processing failed: missing data or info');
-}
+      const float32Data = new Float32Array(256 * 256 * 3);
 
-const data = result.data as Buffer;
-const info = result.info as sharp.OutputInfo;
-
-// Normalize pixel values to [0, 1]
-const float32Data = new Float32Array(256 * 256 * 3);
-for (let i = 0; i < data.length; i++) {
-  float32Data[i] = (data[i] as number) / 255.0;
-}
-
-console.log('📐 Preprocessed image:', {
-  width: info.width,
-  height: info.height,
-  channels: info.channels,
-  dataLength: float32Data.length
-});
-
-return float32Data;
-
-// ...existing code...
-      console.log('📐 Preprocessed image:', {
-        width: info.width,
-        height: info.height,
-        channels: info.channels,
-        dataLength: float32Data.length
-      });
+      /**
+       * 🔄 THE BGR SWAP & NORMALIZATION LOOP
+       * 1. data[i]! / 255.0 fixes the 10% "AI Panic" and the TS2532 error.
+       * 2. Swapping indexes [i] and [i+2] matches your Kaggle cv2.imread(BGR) logic.
+       */
+      for (let i = 0; i < data.length; i += 3) {
+        // We read R, G, B from Sharp and write B, G, R to the tensor
+        float32Data[i]     = data[i + 2]! / 255.0; // Blue
+        float32Data[i + 1] = data[i + 1]! / 255.0; // Green
+        float32Data[i + 2] = data[i]!     / 255.0; // Red
+      }
 
       return float32Data;
-
     } catch (error) {
-      console.error('Preprocessing error:', error);
+      console.error('❌ Preprocessing error:', error);
       throw new Error('Failed to preprocess image');
     }
   }

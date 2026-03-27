@@ -1,44 +1,55 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from "../components/Navbar";
 
+// Interface matching your Prisma Schema
+interface Artefact {
+    id: string;
+    name: string;
+    category: string;
+    era: string;
+    description: string;
+    images: { url: string; isPrimary: boolean }[];
+}
+
 export default function Heritage() {
-    const artefacts = [
-        {
-            name: 'Kĩondo (Traditional Basket)',
-            category: 'Household Items',
-            era: '18th-19th Century',
-            image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400'
-        },
-        {
-            name: 'Mũthĩgi (Wooden Stool)',
-            category: 'Furniture',
-            era: 'Pre-Colonial',
-            image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'
-        },
-        {
-            name: 'Njugũ (Neck Ornament)',
-            category: 'Jewelry',
-            era: '19th Century',
-            image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=400'
-        },
-        {
-            name: 'Mũkwa (Clay Pot)',
-            category: 'Pottery',
-            era: 'Traditional',
-            image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400'
-        },
-        {
-            name: 'Rũthanju (War Shield)',
-            category: 'Weapons',
-            era: 'Warrior Era',
-            image: 'https://images.unsplash.com/photo-1610296669228-602fa827fc1f?w=400'
-        },
-        {
-            name: 'Ngũcũ (Anklet)',
-            category: 'Jewelry',
-            era: '19th Century',
-            image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=400'
-        }
+    const [artefacts, setArtefacts] = useState<Artefact[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeCategory, setActiveCategory] = useState('ALL');
+
+    // These match your Prisma ArtefactCategory enum exactly
+    const categories = [
+        { label: 'All', value: 'ALL' },
+        { label: 'Spears', value: 'KIKUYU_SPEARS' },
+        { label: 'Stools', value: 'KIKUYU_STOOLS' },
+        { label: 'Beadwork', value: 'KIKUYU_BEADWORK' },
+        { label: 'Sticks', value: 'KIKUYU_WALKING_STICK' },
+        { label: 'Pots', value: 'KIKUYU_POTS' },
+        { label: 'Shields', value: 'KIKUYU_SHIELDS' },
+        { label: 'Calabash', value: 'KIKUYU_CALABASH' }
     ];
+
+    useEffect(() => {
+        const fetchArtefacts = async () => {
+            setLoading(true);
+            try {
+                // Adjust this URL if your API route differs
+                const query = activeCategory === 'ALL' ? '' : `?category=${activeCategory}`;
+                const response = await fetch(`http://localhost:5000/api/artefacts${query}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    setArtefacts(result.data.artefacts);
+                }
+            } catch (error) {
+                console.error("Failed to fetch heritage items:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchArtefacts();
+    }, [activeCategory]);
 
     return (
         <div style={{
@@ -88,112 +99,113 @@ export default function Heritage() {
                     justifyContent: 'center',
                     flexWrap: 'wrap'
                 }}>
-                    {['All', 'Household', 'Jewelry', 'Weapons', 'Pottery', 'Furniture'].map((category) => (
+                    {categories.map((cat) => (
                         <button
-                            key={category}
+                            key={cat.value}
+                            onClick={() => setActiveCategory(cat.value)}
                             style={{
                                 padding: '0.7rem 1.8rem',
                                 border: '2px solid #c9a87c',
-                                backgroundColor: category === 'All' ? '#c9a87c' : 'transparent',
-                                color: category === 'All' ? '#ffffff' : '#5a4a3a',
+                                backgroundColor: activeCategory === cat.value ? '#c9a87c' : 'transparent',
+                                color: activeCategory === cat.value ? '#ffffff' : '#5a4a3a',
                                 borderRadius: '8px',
                                 fontSize: '0.95rem',
                                 fontWeight: '500',
                                 cursor: 'pointer',
                                 transition: 'all 0.3s ease'
                             }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#c9a87c';
-                                e.currentTarget.style.color = '#ffffff';
-                            }}
-                            onMouseLeave={(e) => {
-                                if (category !== 'All') {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.color = '#5a4a3a';
-                                }
-                            }}
                         >
-                            {category}
+                            {cat.label}
                         </button>
                     ))}
                 </div>
 
-                {/* Artefacts Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                    gap: '2rem'
-                }}>
-                    {artefacts.map((item, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                backgroundColor: '#ffffff',
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-                                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                                cursor: 'pointer'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-8px)';
-                                e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.12)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-                            }}
-                        >
-                            <div style={{
-                                height: '250px',
-                                background: `url("${item.image}") center/cover`,
-                                position: 'relative'
-                            }}>
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '5rem' }}>
+                        <p style={{ color: '#5a4a3a', fontSize: '1.2rem' }}>Loading our heritage...</p>
+                    </div>
+                ) : (
+                    /* Artefacts Grid */
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                        gap: '2rem'
+                    }}>
+                        {artefacts.length > 0 ? artefacts.map((item) => (
+                            <div
+                                key={item.id}
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: '16px',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                    cursor: 'pointer'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-8px)';
+                                    e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.12)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
+                                }}
+                            >
                                 <div style={{
-                                    position: 'absolute',
-                                    top: '1rem',
-                                    right: '1rem',
-                                    backgroundColor: '#c9a87c',
-                                    color: '#ffffff',
-                                    padding: '0.4rem 1rem',
-                                    borderRadius: '20px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: '600'
+                                    height: '250px',
+                                    background: `url("${item.images.find(img => img.isPrimary)?.url || item.images[0]?.url || 'https://via.placeholder.com/400'}") center/cover`,
+                                    position: 'relative'
                                 }}>
-                                    {item.category}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '1rem',
+                                        right: '1rem',
+                                        backgroundColor: '#c9a87c',
+                                        color: '#ffffff',
+                                        padding: '0.4rem 1rem',
+                                        borderRadius: '20px',
+                                        fontSize: '0.7rem',
+                                        fontWeight: '600'
+                                    }}>
+                                        {item.category.replace('KIKUYU_', '').replace('_', ' ')}
+                                    </div>
+                                </div>
+                                <div style={{ padding: '1.5rem' }}>
+                                    <h3 style={{
+                                        fontSize: '1.3rem',
+                                        fontWeight: '600',
+                                        color: '#2c2420',
+                                        marginBottom: '0.5rem'
+                                    }}>
+                                        {item.name}
+                                    </h3>
+                                    <p style={{
+                                        color: '#5a4a3a',
+                                        fontSize: '0.9rem',
+                                        marginBottom: '1rem'
+                                    }}>
+                                        Era: {item.era}
+                                    </p>
+                                    <Link 
+                                        to={`/heritage/${item.id}`} 
+                                        style={{
+                                            color: '#c9a87c',
+                                            textDecoration: 'none',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Learn More →
+                                    </Link>
                                 </div>
                             </div>
-                            <div style={{ padding: '1.5rem' }}>
-                                <h3 style={{
-                                    fontSize: '1.3rem',
-                                    fontWeight: '600',
-                                    color: '#2c2420',
-                                    marginBottom: '0.5rem'
-                                }}>
-                                    {item.name}
-                                </h3>
-                                <p style={{
-                                    color: '#5a4a3a',
-                                    fontSize: '0.9rem',
-                                    marginBottom: '1rem'
-                                }}>
-                                    Era: {item.era}
-                                </p>
-                                <button style={{
-                                    color: '#c9a87c',
-                                    backgroundColor: 'transparent',
-                                    border: 'none',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    padding: 0
-                                }}>
-                                    Learn More →
-                                </button>
+                        )) : (
+                            <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem' }}>
+                                <p>No artefacts found in this category.</p>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        )}
+                    </div>
+                )}
 
                 {/* CTA Section */}
                 <div style={{
@@ -218,27 +230,21 @@ export default function Heritage() {
                     }}>
                         Help us preserve our cultural heritage by sharing your collection
                     </p>
-                    <button style={{
-                        backgroundColor: '#c9a87c',
-                        color: '#ffffff',
-                        padding: '1rem 3rem',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#d4b890';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#c9a87c';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                    }}>
-                        Submit Your Artefact
-                    </button>
+                    <Link to="/contribute">
+                        <button style={{
+                            backgroundColor: '#c9a87c',
+                            color: '#ffffff',
+                            padding: '1rem 3rem',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                        }}>
+                            Submit Your Artefact
+                        </button>
+                    </Link>
                 </div>
             </div>
         </div>

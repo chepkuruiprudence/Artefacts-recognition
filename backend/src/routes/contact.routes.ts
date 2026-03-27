@@ -23,7 +23,13 @@ const contactValidation = [
  * @desc    Submit contact form
  * @access  Public
  */
-router.post('/', validate(contactValidation), contactController.submit);
+// ✅ Correct code in contact.routes.ts
+router.post(
+  '/', 
+  contactValidation, // Runs the rules you defined above
+  validate,          // Your middleware that checks if validation failed
+  contactController.submit // The actual controller logic that saves to DB
+);
 
 /**
  * @route   GET /api/contact

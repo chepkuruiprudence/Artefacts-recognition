@@ -4,6 +4,7 @@ import Heritage from './pages/Heritage'
 import Classify from './pages/Classify'
 import About from './pages/About'
 import Contact from './pages/Contacts'
+import Contribute from './pages/Contribute'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/classify" element={<Classify />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/contribute" element={<Contribute />} />
       </Routes>
     </BrowserRouter>
   )

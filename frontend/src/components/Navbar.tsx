@@ -58,6 +58,32 @@ export default function Navbar() {
             Classify
           </a>
         </li>
+
+        <li>
+          <a 
+            href="/classify" 
+            style={{
+              color: '#5a4a3a',
+              textDecoration: 'none',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              padding: '0.5rem 0',
+              borderBottom: '2px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#c9a87c';
+              e.currentTarget.style.borderBottomColor = '#c9a87c';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#5a4a3a';
+              e.currentTarget.style.borderBottomColor = 'transparent';
+            }}
+          >
+            Contribute
+          </a>
+        </li>
+        
         <li>
           <a 
             href="/heritage" 

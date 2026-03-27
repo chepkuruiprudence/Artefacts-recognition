@@ -1,0 +1,24 @@
+=== ONNX MODEL CHECK REPORT ===
+
+Model loaded and validated
+
+=== INPUT INFO ===
+Name: args_0:0
+Shape: ['unk__51', 256, 256, 3]
+Type: tensor(float)
+
+=== DUMMY PREDICTION ===
+Output: [array([[0.08820946, 0.09657329, 0.08480506, 0.1047959 , 0.09270229,
+        0.1024318 , 0.10351618, 0.09684705, 0.09526693, 0.07663098,
+        0.05822103]], dtype=float32)]
+Sum: 0.9999999403953552
+
+=== IMAGE TEST ===
+Raw Prediction: [array([[0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]], dtype=float32)]
+Normalized Prediction: [array([[2.2772911e-04, 8.0684818e-02, 3.1720180e-04, 1.9984462e-03,
+        1.0658877e-03, 7.1286470e-01, 6.6996246e-05, 9.1275388e-06,
+        4.6696528e-04, 2.0229813e-01, 2.5551880e-13]], dtype=float32)]
+Raw Sum: 1.0
+Norm Sum: 1.0
+
+=== END ===

@@ -127,17 +127,48 @@ class ArtefactController {
    * POST /api/artefacts
    * Create new artefact (contribution)
    */
+  /**
+   * POST /api/artefacts
+   * Create new artefact (contribution)
+   */
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const artefactData = req.body;
+      const { 
+        name, category, era, description, 
+        culturalSignificance, materials, contributorId 
+      } = req.body;
 
-      // Create artefact
+      // 1. Handle Materials (Frontend sends them as a JSON string via FormData)
+      const materialsArray = typeof materials === 'string' ? JSON.parse(materials) : materials;
+
+      // 2. Prepare Image Data (Assuming you're using Multer)
+      const files = req.files as Express.Multer.File[];
+      const imageData = files?.map((file, index) => ({
+        url: `/uploads/${file.filename}`,
+        isPrimary: index === 0,
+        caption: name
+      })) || [];
+
+      // 3. Create artefact with nested images
       const artefact = await prisma.artefact.create({
         data: {
-          ...artefactData,
+          name,
+          category: category as ArtefactCategory,
+          era,
+          description,
+          culturalSignificance,
+          materials: materialsArray,
           verificationStatus: VerificationStatus.PENDING,
-          // If you have authentication, add: contributorId: req.user.id
+          // Connect contributor if ID is provided
+          ...(contributorId && { contributor: { connect: { id: contributorId } } }),
+          // Create the image records automatically
+          images: {
+            create: imageData
+          }
         },
+        include: {
+          images: true
+        }
       });
 
       res.status(201).json({
@@ -149,7 +180,6 @@ class ArtefactController {
       next(error);
     }
   }
-
   /**
    * GET /api/artefacts/stats
    * Get artefact statistics

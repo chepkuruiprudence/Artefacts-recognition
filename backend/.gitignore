@@ -15,6 +15,11 @@ src/assets/model/*.onnx
 dist/assets/model/*.onnx
 src/assets/model/*.h5
 dist/assets/model/*.h5
+src/assets/images/*.jpg
+dist/assets/images/*.jpg
+src/assets/images/*.png
+dist/assets/images/*.png
+
 
 
 # User Uploads
