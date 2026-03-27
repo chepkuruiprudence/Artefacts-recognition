@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { register, verifyEmail, login } from '../controllers/auth.controller';
+import { register, verifyEmail, login, updateProfile } from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.get('/verify', verifyEmail);
  * @desc    Authenticate user & get token
  */
 router.post('/login', login);
+router.put('/update-profile', authenticate, updateProfile);
 
 export default router;

@@ -36,7 +36,7 @@ class EmailConfig {
   }
 
   async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
-    const url = `http://localhost:5000/api/auth/verify?token=${token}`;
+    const url = `/api/auth/verify?token=${token}`;
     
     const mailOptions = {
       from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,

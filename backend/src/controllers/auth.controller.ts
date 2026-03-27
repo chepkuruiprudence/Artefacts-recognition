@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import emailService from '../services/email.service'; // Using your shared service
+import { AuthRequest } from '../middleware/auth.middleware';
 
 /**
  * POST /api/auth/register
@@ -138,5 +139,31 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: "Login failed." });
+  }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { name },
+      select: { id: true, name: true, email: true, role: true } // Don't return the password
+    });
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error("Update Error:", error);
+    res.status(500).json({ message: "Failed to update profile" });
   }
 };
