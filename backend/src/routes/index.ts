@@ -2,12 +2,14 @@ import { Router } from 'express';
 import classifyRoutes from './classify.routes';
 import artefactRoutes from './artefact.routes';
 import contactRoutes from './contact.routes';
+import authRoutes from './auth.routes';
 
 const router = Router();
 
 /**
  * Mount all route modules
  */
+router.use('/auth', authRoutes);
 router.use('/classify', classifyRoutes);
 router.use('/artefacts', artefactRoutes);
 router.use('/heritage', artefactRoutes); // Heritage uses same endpoints

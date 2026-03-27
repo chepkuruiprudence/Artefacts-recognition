@@ -35,6 +35,35 @@ class EmailConfig {
     }
   }
 
+  async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
+    const url = `http://localhost:5000/api/auth/verify?token=${token}`;
+    
+    const mailOptions = {
+      from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Verify your Account - Ūgwati wa Gĩkũyũ',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0d9d1; padding: 20px; border-radius: 10px;">
+          <h2 style="color: #5a4a3a; text-align: center;">Welcome to the Archive, ${name}!</h2>
+          <p>Thank you for joining Ūgwati wa Gĩkũyũ. To start contributing and preserving our heritage, please verify your email address.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${url}" style="background-color: #c9a87c; color: white; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify My Email</a>
+          </div>
+          
+          <p style="font-size: 0.8rem; color: #666;">If the button above doesn't work, copy and paste this link into your browser:</p>
+          <p style="font-size: 0.8rem; color: #c9a87c; word-break: break-all;">${url}</p>
+          
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #8b6f47; font-size: 0.9rem; text-align: center;">Helping preserve the history of the Gĩkũyũ people.</p>
+        </div>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+    console.log('📧 Verification email sent to:', email);
+  }
+
   /**
    * Send confirmation email to user
    */

@@ -5,6 +5,8 @@ import Classify from './pages/Classify'
 import About from './pages/About'
 import Contact from './pages/Contacts'
 import Contribute from './pages/Contribute'
+import Register from './pages/Register'
+import Login from './pages/Login' 
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/contribute" element={<Contribute />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
   )
