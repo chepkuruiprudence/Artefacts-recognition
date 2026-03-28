@@ -8,6 +8,8 @@ import Contribute from './pages/Contribute'
 import Register from './pages/Register'
 import Login from './pages/Login' 
 import Profile from './pages/Profile'
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminPage from './pages/Admin';
 
 function App() {
   return (
@@ -22,6 +24,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path = "/profile" element={<Profile />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/admin" element={<AdminPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
