@@ -45,32 +45,43 @@ class AIService {
       const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
-        You are an expert Gĩkũyũ Cultural Anthropologist. 
-        Your goal is to provide a deep, educational, and reverent description of a cultural artefact.
+        You are a Master Curator for a high-end Digital Museum of Gĩkũyũ Heritage. 
         
-        ARTEFACT: ${label}
-        CORE FACTS: ${info.description}
-        CULTURAL CONTEXT: ${info.culturalSignificance}
-        MATERIALS USED: ${info.materials.join(', ')}
+        INPUT DATA:
+        - Artefact: ${label}
+        - Historical Era: ${info.era}
+        - Core Description: ${info.description}
+        - Cultural Significance: ${info.culturalSignificance}
+        - Materials: ${info.materials.join(', ')}
 
-        INSTRUCTIONS:
-        1. Write a detailed educational paragraph (6-8 sentences).
-        2. Do NOT shorten the information; instead, elaborate on HOW the materials were used and WHY the significance matters.
-        3. Use a sophisticated, storytelling tone suitable for a high-end digital museum.
-        4. Include the traditional Gĩkũyũ name (e.g., Itimũ, Ngo, Gĩtĩ) naturally in the text.
-        5. Structure the response as a single, cohesive narrative.
+        TASK: 
+        Write a deep, immersive historical narrative about this item. 
         
-        Return ONLY the enhanced text.
+        CONSTRAINTS:
+        1. LENGTH: You MUST write at least 150 words. Do not be brief.
+        2. STRUCTURE: Start with the traditional Gĩkũyũ name and its literal meaning. 
+        3. CRAFTSMANSHIP: Devote a section to the "Materials" listed, explaining the spiritual or practical choice of those specific natural resources.
+        4. SOCIETY: Explain how this item functioned within the "Nyumba" (household) or the wider community.
+        5. TONE: Reverent, academic, and storytelling-focused. 
+        
+        Example: If it is a stool (Gĩtĩ), don't just say it's for sitting; discuss the elder's authority and the sacredness of the wood used.
+
+        Return ONLY the narrative text. Do not include titles or "Here is your description".
       `;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text().trim();
       
-      return text.length > info.description.length ? text : info.description;
+      // If the AI somehow still returns a tiny string, we use our own expanded fallback
+      if (text.split(' ').length < 20) {
+        return `${info.description} This ${label}, traditionally known in Gĩkũyũ culture for its deep roots in ${info.era}, represents more than just a functional object. Crafted from ${info.materials.join(' and ')}, it served as a cornerstone of community identity. ${info.culturalSignificance}`;
+      }
+
+      return text;
 
     } catch (error) {
-      console.error("✨ Gemini Enhancement failed, using original description:", error);
+      console.error("✨ Gemini Enhancement failed:", error);
       return info.description; 
     }
   }
