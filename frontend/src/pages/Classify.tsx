@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react';
 import Navbar from "../components/Navbar";
 import { classifyArtefact } from '../services/api';
 import type { ClassificationData } from '../types/artefact';
+import CameraCapture from '../components/CameraCapture';
 
 // --- Styled Constants ---
 const COLORS = {
@@ -20,8 +21,17 @@ export default function Classify() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
     const [result, setResult] = useState<ClassificationData | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const onCameraCapture = (file: File, previewUrl: string) => {
+        setImageFile(file);
+        setSelectedImage(previewUrl);
+        setIsCameraOpen(false);
+        setError(null);
+        setResult(null);
+    };
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -66,51 +76,82 @@ export default function Classify() {
                         Classify Your <span style={{ fontWeight: '600', color: COLORS.primary }}>Artefact</span>
                     </h1>
                     <p style={{ fontSize: '1.1rem', color: COLORS.textMedium }}>
-                        Upload an image and let AI identify your Kikuyu cultural artefact
+                        Upload an image or take a photo to identify Kikuyu cultural artefacts
                     </p>
                 </header>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '3rem' }}>
                     
-                    {/* Left: Upload Section */}
+                    {/* Left: Input Section */}
                     <section style={cardStyle}>
                         <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} id="file-upload" />
-                        <label htmlFor="file-upload" style={uploadBoxStyle}>
-                            <span style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block' }}>📤</span>
-                            <p style={{ fontWeight: '600', fontSize: '1.1rem', color: COLORS.textDark }}>Click to Upload Image</p>
-                            <p style={{ fontSize: '0.9rem', color: COLORS.textLight, marginTop: '0.5rem' }}>PNG, JPG, JPEG (Max 10MB)</p>
-                        </label>
+                        
+                        {!isCameraOpen ? (
+                            <>
+                                <label htmlFor="file-upload" style={uploadBoxStyle}>
+                                    <span style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block' }}>📤</span>
+                                    <p style={{ fontWeight: '600', fontSize: '1.1rem', color: COLORS.textDark }}>
+                                        {selectedImage ? "Change Image" : "Upload from Gallery"}
+                                    </p>
+                                    <p style={{ fontSize: '0.9rem', color: COLORS.textLight, marginTop: '0.5rem' }}>PNG, JPG (Max 10MB)</p>
+                                </label>
 
-                        {selectedImage && (
+                                <div style={{ textAlign: 'center', margin: '1.5rem 0', color: COLORS.textLight, fontWeight: 'bold' }}>OR</div>
+
+                                <button 
+                                    onClick={() => setIsCameraOpen(true)}
+                                    style={{ ...buttonStyle, backgroundColor: COLORS.textDark, marginTop: 0 }}
+                                >
+                                    📸 Use Live Camera
+                                </button>
+                            </>
+                        ) : (
+                            <CameraCapture 
+                                onCapture={onCameraCapture} 
+                                onClose={() => setIsCameraOpen(false)} 
+                            />
+                        )}
+
+                        {/* ANALYZE BUTTON: Only shows when an image is ready and camera is closed */}
+                        {selectedImage && !isCameraOpen && (
                             <button 
                                 onClick={handleAnalyze} 
                                 disabled={isAnalyzing} 
-                                style={{ ...buttonStyle, backgroundColor: isAnalyzing ? COLORS.primaryHover : COLORS.primary, cursor: isAnalyzing ? 'not-allowed' : 'pointer' }}
+                                style={{ 
+                                    ...buttonStyle, 
+                                    backgroundColor: isAnalyzing ? COLORS.primaryHover : COLORS.primary, 
+                                    cursor: isAnalyzing ? 'not-allowed' : 'pointer' 
+                                }}
                             >
                                 {isAnalyzing ? '🔍 Analyzing...' : '✨ Identify Artefact'}
                             </button>
                         )}
                     </section>
 
-                    {/* Right: Preview & Status Section */}
-                    <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Right: Preview & Feedback Section */}
+                    <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
                         {selectedImage ? (
-                            <>
+                            <div style={{ width: '100%', textAlign: 'center' }}>
                                 <img src={selectedImage} alt="Preview" style={previewImageStyle} />
-                                {isAnalyzing && <div className="spinner" style={spinnerStyle} />}
+                                {isAnalyzing && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <div className="spinner" style={spinnerStyle} />
+                                        <p style={{ color: COLORS.primary, fontWeight: '500' }}>AI is processing...</p>
+                                    </div>
+                                )}
                                 {result && !isAnalyzing && <QuickResult result={result} />}
                                 {error && <div style={errorStyle}>{error}</div>}
-                            </>
+                            </div>
                         ) : (
                             <div style={{ textAlign: 'center', color: '#aaa' }}>
                                 <span style={{ fontSize: '4rem', display: 'block', marginBottom: '1rem' }}>🖼️</span>
-                                <p>Upload an image to get started</p>
+                                <p>Capture or upload an image to see the result</p>
                             </div>
                         )}
                     </section>
                 </div>
 
-                {/* Detailed Results */}
+                {/* Detailed Results Section */}
                 {result && !isAnalyzing && <DetailedInfo result={result} />}
             </main>
 
@@ -128,15 +169,15 @@ export default function Classify() {
 
 function QuickResult({ result }: { result: ClassificationData }) {
     return (
-        <div className="fade-in" style={{ width: '100%', textAlign: 'center' }}>
-            <p style={labelStyle}>Top Prediction</p>
+        <div className="fade-in" style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
+            <p style={labelStyle}>AI Analysis Result</p>
             <h2 style={{ color: COLORS.textDark, fontSize: '1.8rem', margin: '0.5rem 0', textTransform: 'capitalize' }}>
                 {result.prediction.name}
             </h2>
             <div style={confidenceBarBg}>
                 <div style={{ ...confidenceBarFill, width: result.prediction.confidence }} />
             </div>
-            <p style={{ color: COLORS.primary, fontWeight: '600' }}>{result.prediction.confidence} Confident</p>
+            <p style={{ color: COLORS.primary, fontWeight: '600' }}>{result.prediction.confidence} Match Confidence</p>
         </div>
     );
 }
@@ -145,22 +186,22 @@ function DetailedInfo({ result }: { result: ClassificationData }) {
     const { prediction, alternatives } = result;
     return (
         <section className="fade-in" style={detailSectionStyle}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '3rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '3rem' }}>
                 <div>
                     <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: COLORS.textDark }}>Cultural Significance</h2>
                     <p style={descriptionStyle}>{prediction.culturalSignificance}</p>
                     
-                    <h3 style={subHeaderStyle}>Description</h3>
-                    <p style={{ color: '#666', lineHeight: '1.7' }}>{prediction.description}</p>
+                    <h3 style={subHeaderStyle}>Historical Context</h3>
+                    <p style={{ color: '#666', lineHeight: '1.7', fontSize: '1rem' }}>{prediction.description}</p>
 
                     {alternatives && alternatives.length > 0 && (
-                        <div style={{ marginTop: '2rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Alternative Predictions</h3>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{ marginTop: '3rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.2rem', color: COLORS.textMedium }}>Other Possible Matches</h3>
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 {alternatives.map((alt, i) => (
                                     <div key={i} style={altCardStyle}>
-                                        <p style={{ fontWeight: '600', textTransform: 'capitalize' }}>{alt.name}</p>
-                                        <p style={{ color: COLORS.primary, fontSize: '0.9rem' }}>{alt.confidence}</p>
+                                        <p style={{ fontWeight: '600', textTransform: 'capitalize', margin: 0 }}>{alt.name}</p>
+                                        <p style={{ color: COLORS.primary, fontSize: '0.85rem', marginTop: '0.2rem' }}>{alt.confidence} Match</p>
                                     </div>
                                 ))}
                             </div>
@@ -169,10 +210,10 @@ function DetailedInfo({ result }: { result: ClassificationData }) {
                 </div>
 
                 <aside style={metaCardStyle}>
-                    <h4 style={{ color: COLORS.primary, marginBottom: '1.5rem', fontSize: '1.2rem' }}>Details</h4>
-                    <DetailItem label="ERA" value={prediction.era} />
-                    <DetailItem label="CATEGORY" value={prediction.category} />
-                    <DetailItem label="MATERIALS" value={prediction.materials.join(', ')} />
+                    <h4 style={{ color: COLORS.primary, marginBottom: '1.5rem', fontSize: '1.1rem', borderBottom: `1px solid #eee`, paddingBottom: '0.5rem' }}>Artefact Metadata</h4>
+                    <DetailItem label="PROBABLE ERA" value={prediction.era} />
+                    <DetailItem label="CULTURAL CATEGORY" value={prediction.category} />
+                    <DetailItem label="TRADITIONAL MATERIALS" value={prediction.materials.join(', ')} />
                 </aside>
             </div>
         </section>
@@ -181,49 +222,54 @@ function DetailedInfo({ result }: { result: ClassificationData }) {
 
 function DetailItem({ label, value }: { label: string, value: string }) {
     return (
-        <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontSize: '0.85rem', color: COLORS.textLight, marginBottom: '0.3rem' }}>{label}</p>
-            <p style={{ fontWeight: '600', color: COLORS.textDark }}>{value}</p>
+        <div style={{ marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.75rem', color: COLORS.textLight, marginBottom: '0.2rem', fontWeight: 'bold' }}>{label}</p>
+            <p style={{ fontWeight: '500', color: COLORS.textDark, lineHeight: '1.4' }}>{value}</p>
         </div>
     );
 }
 
-// --- Specific Styles ---
+// --- Reusable Styles ---
 const cardStyle: React.CSSProperties = {
     backgroundColor: COLORS.white,
     borderRadius: '16px',
     padding: '2rem',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    display: 'flex',
+    flexDirection: 'column'
 };
 
 const uploadBoxStyle: React.CSSProperties = {
     display: 'block',
     border: `2px dashed ${COLORS.primary}`,
     borderRadius: '12px',
-    padding: '3rem 2rem',
+    padding: '3.5rem 2rem',
     cursor: 'pointer',
     textAlign: 'center',
-    transition: 'background 0.3s'
+    transition: 'all 0.3s ease',
+    backgroundColor: '#fafaf9'
 };
 
 const buttonStyle: React.CSSProperties = {
     marginTop: '1.5rem',
     width: '100%',
-    padding: '1rem',
+    padding: '1.1rem',
     color: COLORS.white,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontWeight: '600',
     fontSize: '1rem',
-    transition: 'all 0.3s'
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
 };
 
 const previewImageStyle: React.CSSProperties = {
     maxWidth: '100%',
     borderRadius: '12px',
-    maxHeight: '300px',
-    objectFit: 'cover',
-    marginBottom: '1.5rem'
+    maxHeight: '400px',
+    objectFit: 'contain',
+    marginBottom: '1.5rem',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
 };
 
 const spinnerStyle: React.CSSProperties = {
@@ -236,19 +282,19 @@ const spinnerStyle: React.CSSProperties = {
 };
 
 const detailSectionStyle: React.CSSProperties = {
-    marginTop: '4rem',
+    marginTop: '2rem',
     backgroundColor: COLORS.white,
-    padding: '3rem',
-    borderRadius: '16px',
-    borderLeft: `8px solid ${COLORS.primary}`,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+    padding: '3.5rem',
+    borderRadius: '20px',
+    borderLeft: `10px solid ${COLORS.primary}`,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.08)'
 };
 
-const confidenceBarBg: React.CSSProperties = { height: '12px', backgroundColor: '#eee', borderRadius: '6px', overflow: 'hidden', margin: '1rem 0' };
-const confidenceBarFill: React.CSSProperties = { backgroundColor: COLORS.primary, height: '100%', transition: 'width 1s ease-out' };
-const labelStyle: React.CSSProperties = { fontSize: '0.75rem', color: COLORS.textLight, textTransform: 'uppercase', letterSpacing: '1px' };
-const descriptionStyle: React.CSSProperties = { lineHeight: '1.8', color: '#444', fontSize: '1.05rem', marginBottom: '2rem' };
-const subHeaderStyle: React.CSSProperties = { marginTop: '2rem', fontSize: '1.3rem', color: COLORS.textDark, marginBottom: '0.8rem' };
-const altCardStyle: React.CSSProperties = { backgroundColor: '#faf8f5', padding: '1rem', borderRadius: '8px', flex: 1 };
-const metaCardStyle: React.CSSProperties = { backgroundColor: '#fcfaf8', padding: '2rem', borderRadius: '12px', height: 'fit-content' };
-const errorStyle: React.CSSProperties = { backgroundColor: COLORS.errorBg, color: COLORS.error, padding: '1rem', borderRadius: '8px', marginTop: '1rem' };
+const confidenceBarBg: React.CSSProperties = { height: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px', overflow: 'hidden', margin: '1rem 0' };
+const confidenceBarFill: React.CSSProperties = { backgroundColor: COLORS.primary, height: '100%', transition: 'width 1.2s cubic-bezier(0.17, 0.67, 0.83, 0.67)' };
+const labelStyle: React.CSSProperties = { fontSize: '0.75rem', color: COLORS.textLight, textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 'bold' };
+const descriptionStyle: React.CSSProperties = { lineHeight: '1.8', color: '#333', fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic' };
+const subHeaderStyle: React.CSSProperties = { marginTop: '2rem', fontSize: '1.3rem', color: COLORS.textDark, marginBottom: '0.8rem', fontWeight: '600' };
+const altCardStyle: React.CSSProperties = { backgroundColor: '#f8f6f4', padding: '0.8rem 1.2rem', borderRadius: '10px', border: '1px solid #eee' };
+const metaCardStyle: React.CSSProperties = { backgroundColor: '#faf9f7', padding: '2rem', borderRadius: '15px', height: 'fit-content', border: '1px solid #f0ede9' };
+const errorStyle: React.CSSProperties = { backgroundColor: COLORS.errorBg, color: COLORS.error, padding: '1rem', borderRadius: '8px', marginTop: '1rem', textAlign: 'center', width: '100%' };
