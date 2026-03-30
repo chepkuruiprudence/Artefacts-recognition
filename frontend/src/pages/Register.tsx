@@ -20,9 +20,11 @@ export default function Register() {
 
     setLoading(true);
     setMsg({ text: '', type: '' });
+
+    const API_BASE = import.meta.env.VITE_API_URL;
     
     try {
-      const res = await fetch('/auth/register', {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

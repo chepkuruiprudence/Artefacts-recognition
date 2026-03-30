@@ -32,10 +32,12 @@ export default function Heritage() {
     useEffect(() => {
         const fetchArtefacts = async () => {
             setLoading(true);
+            const API_BASE = import.meta.env.VITE_API_URL;
+
             try {
                 // Adjust this URL if your API route differs
                 const query = activeCategory === 'ALL' ? '' : `?category=${activeCategory}`;
-                const response = await fetch(`/artefacts${query}`);
+                const response = await fetch(`${API_BASE}/artefacts${query}`);
                 const result = await response.json();
                 
                 if (result.success) {

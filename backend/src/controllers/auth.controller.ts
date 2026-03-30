@@ -76,15 +76,14 @@ export const verifyEmail = async (req: Request, res: Response) => {
     });
 
     // Success Response (You could also redirect to your frontend login page here)
-    res.send(`
-      <div style="font-family: sans-serif; text-align: center; padding: 50px;">
-        <h1 style="color: #5a4a3a;">Email Verified Successfully!</h1>
-        <p>Your account is now active. You can close this window and log in to the Ūgwati wa Gĩkũyũ archive.</p>
-        <a href="http://localhost:5173/login" style="color: #c9a87c; font-weight: bold;">Go to Login</a>
-      </div>
-    `);
+    return res.status(200).json({ 
+      success: true, 
+      message: "Email verified successfully!" 
+    });
+
   } catch (error) {
-    res.status(500).send("An error occurred during verification.");
+    console.error("Verification Error:", error);
+    return res.status(500).json({ success: false, message: "An error occurred during verification." });
   }
 };
 

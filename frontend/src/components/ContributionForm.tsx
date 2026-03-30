@@ -41,8 +41,10 @@ export default function ContributionForm() {
             }
         }
 
+        const API_BASE = import.meta.env.VITE_API_URL;
+
         try {
-            const response = await fetch('/artefacts', {
+            const response = await fetch(`${API_BASE}/artefacts`, {
                 method: 'POST',
                 body: data, // Note: Don't set Content-Type header when using FormData
             });

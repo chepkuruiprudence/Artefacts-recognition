@@ -36,7 +36,7 @@ class EmailConfig {
   }
 
   async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173/api';
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const url = `${baseUrl}/auth/verify?token=${token}`;
     
     const mailOptions = {

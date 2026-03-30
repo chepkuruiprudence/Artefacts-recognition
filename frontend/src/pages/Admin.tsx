@@ -9,9 +9,12 @@ export default function Admin() {
 
   useEffect(() => {
     const fetchData = async () => {
+
+        const API_BASE = import.meta.env.VITE_API_URL;
+
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('/admin/stats', {
+        const response = await axios.get(`${API_BASE}/admin/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setData(response.data);

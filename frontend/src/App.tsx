@@ -10,6 +10,7 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminPage from './pages/Admin';
+import VerifyEmail from './pages/VerifyEmail'
 
 function App() {
   return (
@@ -25,7 +26,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path = "/profile" element={<Profile />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/auth/verify" element={<VerifyEmail />} />
         </Route>
       </Routes>
     </BrowserRouter>

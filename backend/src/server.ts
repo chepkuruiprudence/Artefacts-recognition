@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config as dotenvConfig } from 'dotenv';
 import path from 'path';
@@ -26,37 +26,68 @@ class Server {
   }
 
   /**
-   * Configure middleware
+   * Configure middleware with Enhanced CORS and Body Parsers
    */
   private initializeMiddlewares(): void {
-    // Enable CORS
+    // 1. Define all allowed origins (Local Dev + Production Vercel)
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://artefacts-recognition.vercel.app'
+    ];
+
+    // 2. Enhanced CORS configuration
     this.app.use(
       cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+          if (!origin) return callback(null, true);
+
+          // Clean the origin (remove trailing slashes for strict matching)
+          const cleanOrigin = origin.replace(/\/$/, "");
+          const isAllowed = allowedOrigins.some(o => o.replace(/\/$/, "") === cleanOrigin);
+
+          if (isAllowed) {
+            callback(null, true);
+          } else {
+            console.warn(`⚠️ CORS Blocked: Origin ${origin} not in allowed list`);
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
       })
     );
 
-    // Parse JSON bodies
+    // 3. Standard Body Parsers
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
 
-    // Serve uploaded files
+    // 4. Static Files serving
     this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-    // Request logging (development)
-    if (process.env.NODE_ENV === 'development') {
-      this.app.use((req, res, next) => {
+    // 5. Request Logging (Active in development mode)
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      if (process.env.NODE_ENV === 'development') {
         console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-        next();
-      });
-    }
+      }
+      next();
+    });
   }
 
   /**
-   * Mount routes
+   * Mount API routes
    */
   private initializeRoutes(): void {
+    // Basic root route to prevent 404 when visiting the base Render URL
+    this.app.get('/', (req: Request, res: Response) => {
+      res.json({ 
+        message: "Ūgwati wa Gĩkũyũ API is Live", 
+        env: process.env.NODE_ENV || 'development' 
+      });
+    });
+
+    // Main API routes
     this.app.use('/api', routes);
   }
 
@@ -81,7 +112,10 @@ class Server {
         console.log('🚀 ================================');
         console.log(`🚀 Server running on port ${this.port}`);
         console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`🚀 API URL: http://localhost:${this.port}/api`);
+        
+        // Dynamic logging for the API URL
+        const displayUrl = process.env.API_URL || `http://localhost:${this.port}/api`;
+        console.log(`🚀 API URL: ${displayUrl}`);
         console.log('🚀 ================================');
       });
     } catch (error) {
@@ -100,15 +134,15 @@ class Server {
   }
 }
 
-// Create and start server
+// Create and start server instance
 const server = new Server();
 server.start();
 
-// Handle shutdown signals
+// Handle Process Signals for clean exit
 process.on('SIGTERM', () => server.shutdown());
 process.on('SIGINT', () => server.shutdown());
 
-// Handle unhandled rejections
+// Handle Unhandled Rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   server.shutdown();
