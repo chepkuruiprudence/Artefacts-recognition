@@ -11,8 +11,8 @@ node_modules
 /generated/prisma
 
 # Models
-src/assets/model/*.onnx
-dist/assets/model/*.onnx
+!src/assets/model/*.onnx
+!dist/assets/model/*.onnx
 src/assets/model/*.h5
 dist/assets/model/*.h5
 src/assets/images/*.jpg
