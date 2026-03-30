@@ -7,8 +7,8 @@ export default defineConfig({
   server : {
     proxy : {
       '/api' : {
-        target : 'https://artefacts-recognition.onrender.com/',
-        // target : 'http://localhost:5000',
+        target : 'https://artefacts-recognition.onrender.com/api',
+        // target : 'http://localhost:5000/api',
         changeOrigin : true,
         secure : false,
       }

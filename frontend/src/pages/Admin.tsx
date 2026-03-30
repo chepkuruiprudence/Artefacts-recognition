@@ -11,7 +11,7 @@ export default function Admin() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/stats', {
+        const response = await axios.get('/admin/stats', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setData(response.data);

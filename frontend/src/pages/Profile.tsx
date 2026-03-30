@@ -36,7 +36,7 @@ export default function Profile() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/auth/update-profile`, {
+      const res = await fetch(`/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

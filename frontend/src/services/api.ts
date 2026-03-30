@@ -23,7 +23,7 @@ export const classifyArtefact = async (file: File): Promise<ClassificationData> 
 
   try {
     const { data } = await api.post<ApiResponse<ClassificationData>>(
-      '/api/classify',
+      '/classify',
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -45,7 +45,7 @@ export const classifyArtefact = async (file: File): Promise<ClassificationData> 
  * Get classification history
  */
 export const getClassificationHistory = async () => {
-  const { data } = await api.get<ApiResponse<any>>('/api/classify/history');
+  const { data } = await api.get<ApiResponse<any>>('/classify/history');
   return data.data;
 };
 
@@ -64,7 +64,7 @@ export const getArtefacts = async (filters?: {
   if (filters?.page) params.append('page', filters.page.toString());
   if (filters?.limit) params.append('limit', filters.limit.toString());
 
-  const { data } = await api.get<ApiResponse<any>>(`/api/artefacts?${params}`);
+  const { data } = await api.get<ApiResponse<any>>(`/artefacts?${params}`);
   return data.data;
 };
 
@@ -77,6 +77,6 @@ export const submitContact = async (formData: {
   subject: string;
   message: string;
 }) => {
-  const { data } = await api.post<ApiResponse<any>>('/api/contact', formData);
+  const { data } = await api.post<ApiResponse<any>>('/contact', formData);
   return data;
 };
