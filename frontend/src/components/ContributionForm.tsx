@@ -42,7 +42,7 @@ export default function ContributionForm() {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/artefacts', {
+            const response = await fetch('/api/artefacts', {
                 method: 'POST',
                 body: data, // Note: Don't set Content-Type header when using FormData
             });

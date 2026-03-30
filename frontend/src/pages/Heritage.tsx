@@ -35,7 +35,7 @@ export default function Heritage() {
             try {
                 // Adjust this URL if your API route differs
                 const query = activeCategory === 'ALL' ? '' : `?category=${activeCategory}`;
-                const response = await fetch(`http://localhost:5000/api/artefacts${query}`);
+                const response = await fetch(`/api/artefacts${query}`);
                 const result = await response.json();
                 
                 if (result.success) {
