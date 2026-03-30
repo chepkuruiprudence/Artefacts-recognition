@@ -7,12 +7,12 @@ import { AppError } from '../middleware/error.middleware';
 
 /**
  * Classification Controller
- * Handles image upload and AI classification
+ * Handles image upload, ONNX classification, and Gemini enhancement
  */
 class ClassifyController {
   /**
    * POST /api/classify
-   * Upload and classify an artefact image
+   * Upload, classify, and generate an AI-enhanced description
    */
   async classifyImage(
     req: MulterRequest,
@@ -20,7 +20,6 @@ class ClassifyController {
     next: NextFunction
   ): Promise<void> {
     try {
-      // Check if file was uploaded
       if (!req.file) {
         throw new AppError('Please upload an image file', 400);
       }
@@ -28,37 +27,44 @@ class ClassifyController {
       const imagePath = req.file.path;
       const imageUrl = `/uploads/${req.file.filename}`;
 
-      console.log('🔍 Classifying image:', imagePath);
-
-      // Run AI classification
+      // 1. Run local ONNX classification
       const classificationResult = await aiService.classifyImage(imagePath);
+      const topLabel = classificationResult.topPrediction.label;
 
-      // Get detailed artefact information
-      const artefactInfo = aiService.getArtefactInfo(
-        classificationResult.topPrediction.label
-      );
+      // 2. Fetch static information from the local database
+      const artefactInfo = aiService.getArtefactInfo(topLabel);
 
-      // Save classification to database for analytics
+      // 3. ✨ Gemini AI Enhancement Logic
+      // We only enhance if it's a recognized artefact (not 'non artefacts')
+      if (topLabel !== 'non artefacts') {
+        console.log(`✨ Enhancing description for: ${topLabel}`);
+        const enhancedDescription = await aiService.enhanceDescription(
+          topLabel,
+          artefactInfo
+        );
+        // Overwrite the static description with the AI-beautified one
+        artefactInfo.description = enhancedDescription;
+      }
+
+      // 4. Save to database for history/analytics
       await prisma.classification.create({
         data: {
           imagePath: imageUrl,
-          topPrediction: classificationResult.topPrediction.label,
+          topPrediction: topLabel,
           confidence: classificationResult.topPrediction.confidence,
-          allPredictions: classificationResult.allPredictions,
+          allPredictions: classificationResult.allPredictions as any,
           processingTime: classificationResult.metadata.processingTime,
         },
       });
 
-      // Return results
+      // 5. Return JSON results
       res.json({
         success: true,
         data: {
           prediction: {
-            name: classificationResult.topPrediction.label,
-            confidence:
-              (classificationResult.topPrediction.confidence * 100).toFixed(2) +
-              '%',
-            ...artefactInfo,
+            name: topLabel,
+            confidence: (classificationResult.topPrediction.confidence * 100).toFixed(2) + '%',
+            ...artefactInfo, // Now contains the AI-enhanced description
           },
           alternatives: classificationResult.allPredictions
             .slice(1, 3)
@@ -67,12 +73,10 @@ class ClassifyController {
               confidence: (pred.confidence * 100).toFixed(2) + '%',
             })),
           imageUrl,
-          processingTime:
-            classificationResult.metadata.processingTime.toFixed(2) + 's',
+          processingTime: classificationResult.metadata.processingTime.toFixed(2) + 's',
         },
       });
     } catch (error) {
-      // Clean up uploaded file on error
       if (req.file) {
         await deleteUploadedFile(req.file.path);
       }
@@ -80,10 +84,6 @@ class ClassifyController {
     }
   }
 
-  /**
-   * GET /api/classify/history
-   * Get classification history (last 50)
-   */
   async getHistory(
     req: MulterRequest,
     res: Response,
@@ -93,21 +93,11 @@ class ClassifyController {
       const history = await prisma.classification.findMany({
         take: 50,
         orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          imagePath: true,
-          topPrediction: true,
-          confidence: true,
-          createdAt: true,
-        },
       });
 
       res.json({
         success: true,
-        data: {
-          history,
-          count: history.length,
-        },
+        data: { history, count: history.length },
       });
     } catch (error) {
       next(error);
