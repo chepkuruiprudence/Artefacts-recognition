@@ -41,50 +41,43 @@ class AIService {
    * Uses Gemini to turn static facts into a compelling storytelling experience
    */
   async enhanceDescription(label: string, info: ArtefactInfo): Promise<string> {
-    try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  try {
+    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // Updated prompt based on your bilingual requirement
+    const prompt = `
+      You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
       
-      const prompt = `
-        You are a Master Curator for a high-end Digital Museum of Gĩkũyũ Heritage. 
-        
-        INPUT DATA:
-        - Artefact: ${label}
-        - Historical Era: ${info.era}
-        - Core Description: ${info.description}
-        - Cultural Significance: ${info.culturalSignificance}
-        - Materials: ${info.materials.join(', ')}
+      INPUT DATA:
+      - Artefact: ${label} (${info.category})
+      - Era: ${info.era}
+      - Core Facts: ${info.description}
+      - Materials: ${info.materials.join(', ')}
 
-        TASK: 
-        Write a deep, immersive historical narrative about this item. 
-        
-        CONSTRAINTS:
-        1. LENGTH: You MUST write at least 150 words. Do not be brief.
-        2. STRUCTURE: Start with the traditional Gĩkũyũ name and its literal meaning. 
-        3. CRAFTSMANSHIP: Devote a section to the "Materials" listed, explaining the spiritual or practical choice of those specific natural resources.
-        4. SOCIETY: Explain how this item functioned within the "Nyumba" (household) or the wider community.
-        5. TONE: Reverent, academic, and storytelling-focused. 
-        
-        Example: If it is a stool (Gĩtĩ), don't just say it's for sitting; discuss the elder's authority and the sacredness of the wood used.
-
-        Return ONLY the narrative text. Do not include titles or "Here is your description".
-      `;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      TASK: Write a deep, 150-word museum narrative for this artefact.
       
-      // If the AI somehow still returns a tiny string, we use our own expanded fallback
-      if (text.split(' ').length < 20) {
-        return `${info.description} This ${label}, traditionally known in Gĩkũyũ culture for its deep roots in ${info.era}, represents more than just a functional object. Crafted from ${info.materials.join(' and ')}, it served as a cornerstone of community identity. ${info.culturalSignificance}`;
-      }
+      FORMAT: 
+      You MUST return the response in exactly this format with the "---" separator:
+      [English Narrative Here]
+      ---
+      [Gĩkũyũ Narrative Here]
 
-      return text;
+      CONSTRAINTS:
+      1. Use respectful, elder-level Gĩkũyũ.
+      2. Both versions must be equally detailed and approximately 150 words.
+      3. Do not include any other text, labels like "ENGLISH:", or introductory remarks.
+    `;
 
-    } catch (error) {
-      console.error("✨ Gemini Enhancement failed:", error);
-      return info.description; 
-    }
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text().trim();
+
+  } catch (error) {
+    console.error("✨ Gemini Enhancement failed:", error);
+    // Fallback: providing a basic bilingual string if AI fails
+    return `${info.description} --- ${info.description} (Ũhoro ũyũ ndũrathuthurio na Gĩkũyũ)`; 
   }
+}
 
   private async initModel(): Promise<void> {
     try {

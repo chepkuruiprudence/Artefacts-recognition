@@ -112,7 +112,6 @@ export default function Classify() {
                             />
                         )}
 
-                        {/* ANALYZE BUTTON: Only shows when an image is ready and camera is closed */}
                         {selectedImage && !isCameraOpen && (
                             <button 
                                 onClick={handleAnalyze} 
@@ -184,19 +183,48 @@ function QuickResult({ result }: { result: ClassificationData }) {
 
 function DetailedInfo({ result }: { result: ClassificationData }) {
     const { prediction, alternatives } = result;
+    const [language, setLanguage] = useState<'EN' | 'KI'>('EN');
+
+    const displaySignificance = language === 'EN' 
+        ? prediction.culturalSignificance 
+        : (prediction as any).culturalSignificanceKI || "Ũhoro ũyũ ndũrathuthurio na Gĩkũyũ...";
+
+    const displayDescription = language === 'EN'
+        ? prediction.description
+        : (prediction as any).descriptionKI || "Maũndũ marĩa makonainie na gĩtĩ kĩrĩa kĩonania...";
+
     return (
-        <section className="fade-in" style={detailSectionStyle}>
+        <section className="fade-in" style={{ ...detailSectionStyle, position: 'relative' }}>
+            
+            <button 
+                onClick={() => setLanguage(language === 'EN' ? 'KI' : 'EN')}
+                style={languageToggleStyle}
+            >
+                {language === 'EN' ? '🌍 Translate to Gĩkũyũ' : '🇬🇧 Show English'}
+            </button>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '3rem' }}>
                 <div>
-                    <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: COLORS.textDark }}>Cultural Significance</h2>
-                    <p style={descriptionStyle}>{prediction.culturalSignificance}</p>
+                    <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: COLORS.textDark }}>
+                        {language === 'EN' ? 'Cultural Significance' : 'Ũtari wa Kĩndũ Gĩkĩ'}
+                    </h2>
                     
-                    <h3 style={subHeaderStyle}>Historical Context</h3>
-                    <p style={{ color: '#666', lineHeight: '1.7', fontSize: '1rem' }}>{prediction.description}</p>
+                    <p style={descriptionStyle}>
+                        {displaySignificance}
+                    </p>
+                    
+                    <h3 style={subHeaderStyle}>
+                        {language === 'EN' ? 'Historical Context' : 'Ũhoro wa Tene'}
+                    </h3>
+                    <p style={{ color: '#666', lineHeight: '1.7', fontSize: '1rem' }}>
+                        {displayDescription}
+                    </p>
 
                     {alternatives && alternatives.length > 0 && (
                         <div style={{ marginTop: '3rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.2rem', color: COLORS.textMedium }}>Other Possible Matches</h3>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.2rem', color: COLORS.textMedium }}>
+                                {language === 'EN' ? 'Other Possible Matches' : 'Indũ Ingĩ Ihanaine na Gĩkĩ'}
+                            </h3>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 {alternatives.map((alt, i) => (
                                     <div key={i} style={altCardStyle}>
@@ -210,10 +238,12 @@ function DetailedInfo({ result }: { result: ClassificationData }) {
                 </div>
 
                 <aside style={metaCardStyle}>
-                    <h4 style={{ color: COLORS.primary, marginBottom: '1.5rem', fontSize: '1.1rem', borderBottom: `1px solid #eee`, paddingBottom: '0.5rem' }}>Artefact Metadata</h4>
-                    <DetailItem label="PROBABLE ERA" value={prediction.era} />
-                    <DetailItem label="CULTURAL CATEGORY" value={prediction.category} />
-                    <DetailItem label="TRADITIONAL MATERIALS" value={prediction.materials.join(', ')} />
+                    <h4 style={{ color: COLORS.primary, marginBottom: '1.5rem', fontSize: '1.1rem', borderBottom: `1px solid #eee`, paddingBottom: '0.5rem' }}>
+                        {language === 'EN' ? 'Artefact Metadata' : 'Ũhoro Makĩria'}
+                    </h4>
+                    <DetailItem label={language === 'EN' ? "PROBABLE ERA" : "HĨNDĨ ĨRĨA KYARĨ KUO"} value={prediction.era} />
+                    <DetailItem label={language === 'EN' ? "CULTURAL CATEGORY" : "MŨTHEMABA WA KĨNDŨ"} value={prediction.category} />
+                    <DetailItem label={language === 'EN' ? "TRADITIONAL MATERIALS" : "MĨTHEMABA YA MITI/NYŨMBŨ"} value={prediction.materials.join(', ')} />
                 </aside>
             </div>
         </section>
@@ -288,6 +318,23 @@ const detailSectionStyle: React.CSSProperties = {
     borderRadius: '20px',
     borderLeft: `10px solid ${COLORS.primary}`,
     boxShadow: '0 10px 30px rgba(0,0,0,0.08)'
+};
+
+const languageToggleStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    backgroundColor: COLORS.white,
+    border: `1px solid ${COLORS.primary}`,
+    color: COLORS.primary,
+    padding: '0.5rem 1rem',
+    borderRadius: '20px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+    zIndex: 10
 };
 
 const confidenceBarBg: React.CSSProperties = { height: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px', overflow: 'hidden', margin: '1rem 0' };
