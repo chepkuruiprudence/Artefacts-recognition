@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
 import { ArtefactCategory, VerificationStatus } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { any } from '@tensorflow/tfjs-node';
 
 /**
  * Artefact Controller
@@ -212,7 +213,7 @@ class ArtefactController {
         success: true,
         data: {
           total,
-          byCategory: byCategory.map(item => ({
+          byCategory: byCategory.map((item: any) => ({
             category: item.category,
             count: item._count,
           })),
