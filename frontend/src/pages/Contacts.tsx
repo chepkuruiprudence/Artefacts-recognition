@@ -156,12 +156,12 @@ export default function Contact() {
                                             style={{ width: '100%', padding: '1rem', border: '2px solid #e8dfd5', borderRadius: '8px', fontSize: '1rem', backgroundColor: '#fff', cursor: 'pointer' }}
                                         >
                                             <option value="">Select a subject</option>
-                                            <option value="general">General Inquiry</option>
-                                            <option value="classification">Artefact Classification</option>
-                                            <option value="contribution">Contribute an Artefact</option>
-                                            <option value="partnership">Partnership Opportunity</option>
-                                            <option value="technical">Technical Support</option>
-                                            <option value="other">Other</option>
+                                            <option value="GENERAL">General Inquiry</option>
+                                            <option value="CLASSIFICATION">Artefact Classification</option>
+                                            <option value="CONTRIBUTION">Contribute an Artefact</option>
+                                            <option value="PARTNERSHIP">Partnership Opportunity</option>
+                                            <option value="TECHNICAL">Technical Support</option>
+                                            <option value="OTHER">Other</option>
                                         </select>
                                     </div>
 

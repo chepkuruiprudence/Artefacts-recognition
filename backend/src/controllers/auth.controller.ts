@@ -22,7 +22,7 @@ export const register = async (req: Request, res: Response) => {
 
     // 2. Generate verification token and hash password
     const token = crypto.randomBytes(32).toString('hex');
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3. Create user in database
     const user = await prisma.user.create({

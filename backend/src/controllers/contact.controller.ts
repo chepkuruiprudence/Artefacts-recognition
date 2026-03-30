@@ -17,11 +17,10 @@ class ContactController {
     try {
       const { name, email, subject, message } = req.body;
 
-      // Get IP address
-      const ipAddress =
-        (req.headers['x-forwarded-for'] as string) ||
-        req.socket.remoteAddress ||
-        'unknown';
+     const forwarded = req.headers['x-forwarded-for'];
+     const ipAddress = typeof forwarded === 'string' 
+    ? forwarded.split(',')[0] 
+    : req.socket.remoteAddress || '127.0.0.1';
 
       // Save to database
       const contact = await prisma.contact.create({
