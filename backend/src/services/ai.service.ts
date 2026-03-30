@@ -42,32 +42,35 @@ class AIService {
    */
   async enhanceDescription(label: string, info: ArtefactInfo): Promise<string> {
     try {
-      // Use the flash model for low latency
       const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
-        You are a Gĩkũyũ cultural historian and museum curator. 
-        I have identified an object as: ${label}.
+        You are an expert Gĩkũyũ Cultural Anthropologist. 
+        Your goal is to provide a deep, educational, and reverent description of a cultural artefact.
         
-        Static Data:
-        - Basic Description: ${info.description}
-        - Cultural Significance: ${info.culturalSignificance}
-        - Materials: ${info.materials.join(', ')}
+        ARTEFACT: ${label}
+        CORE FACTS: ${info.description}
+        CULTURAL CONTEXT: ${info.culturalSignificance}
+        MATERIALS USED: ${info.materials.join(', ')}
 
-        Task: Rewrite the 'Basic Description' into a highly engaging, poetic, and historically accurate paragraph (max 4 sentences). 
-        - Use a storytelling tone. 
-        - Ensure you mention the traditional Gĩkũyũ name.
-        - Focus on the craftsmanship and heritage.
-        Return only the enhanced description text.
+        INSTRUCTIONS:
+        1. Write a detailed educational paragraph (6-8 sentences).
+        2. Do NOT shorten the information; instead, elaborate on HOW the materials were used and WHY the significance matters.
+        3. Use a sophisticated, storytelling tone suitable for a high-end digital museum.
+        4. Include the traditional Gĩkũyũ name (e.g., Itimũ, Ngo, Gĩtĩ) naturally in the text.
+        5. Structure the response as a single, cohesive narrative.
+        
+        Return ONLY the enhanced text.
       `;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text().trim();
       
-      return text.length > 10 ? text : info.description;
+      return text.length > info.description.length ? text : info.description;
+
     } catch (error) {
-      console.error("✨ Gemini Enhancement failed, falling back to database:", error);
+      console.error("✨ Gemini Enhancement failed, using original description:", error);
       return info.description; 
     }
   }
