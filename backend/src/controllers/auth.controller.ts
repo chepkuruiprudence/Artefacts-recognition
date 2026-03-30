@@ -3,14 +3,16 @@ import { prisma } from '../config/database';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import emailService from '../services/email.service'; // Using your shared service
+import emailService from '../services/email.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 /**
  * POST /api/auth/register
- * Register a new user and send verification email
+ * Register a new user and send verification email.
+ * Includes cleanup logic to delete user if email fails.
  */
 export const register = async (req: Request, res: Response) => {
+  let newUser; 
   try {
     const { email, password, name } = req.body;
 
@@ -25,18 +27,19 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3. Create user in database
-    const user = await prisma.user.create({
+    newUser = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
         verificationToken: token,
-        role: 'USER', // Default role
+        role: 'USER',
         verified: false
       },
     });
 
-    // 4. Send the verification email using your EmailConfig service
+    // 4. Send the verification email
+    // If this fails, the 'catch' block will trigger and delete the newUser
     await emailService.sendVerificationEmail(email, name, token);
 
     res.status(201).json({ 
@@ -44,27 +47,40 @@ export const register = async (req: Request, res: Response) => {
       message: "Registration successful! Please check your email to verify your account." 
     });
   } catch (error) {
+    // IF EMAIL FAILS: Delete the user so they aren't stuck with a taken email but no verification
+    if (newUser) {
+      await prisma.user.delete({ where: { id: newUser.id } });
+    }
+    
     console.error("Registration Error:", error);
-    res.status(500).json({ success: false, error: "Registration failed. Please try again later." });
+    res.status(500).json({ 
+      success: false, 
+      message: "Could not send verification email. Please try again later." 
+    });
   }
 };
 
 /**
  * GET /api/auth/verify
- * Endpoint called when user clicks the link in their email
+ * Endpoint called when user clicks the link in their email.
+ * Returns JSON for the React Frontend to process.
  */
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
 
-    if (!token) return res.status(400).send("Verification token is missing.");
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Verification token is missing." });
+    }
 
     // Find user with this token
     const user = await prisma.user.findUnique({ 
       where: { verificationToken: token as string } 
     });
 
-    if (!user) return res.status(400).send("<h1>Invalid or expired token</h1>");
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired token." });
+    }
 
     // Update user status
     await prisma.user.update({
@@ -75,7 +91,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
       },
     });
 
-    // Success Response (You could also redirect to your frontend login page here)
     return res.status(200).json({ 
       success: true, 
       message: "Email verified successfully!" 
@@ -83,7 +98,10 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error("Verification Error:", error);
-    return res.status(500).json({ success: false, message: "An error occurred during verification." });
+    return res.status(500).json({ 
+        success: false, 
+        message: "An error occurred during verification." 
+    });
   }
 };
 
@@ -93,7 +111,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
  */
 export const login = async (req: Request, res: Response) => {
   try {
-   const { email, password } = req.body;
+    const { email, password } = req.body;
     console.log('--- LOGIN DEBUG ---');
     console.log('Email:', email);
 
@@ -137,10 +155,14 @@ export const login = async (req: Request, res: Response) => {
       } 
     });
   } catch (error) {
+    console.error("Login Error:", error);
     res.status(500).json({ success: false, error: "Login failed." });
   }
 };
 
+/**
+ * PUT /api/auth/update-profile
+ */
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -153,7 +175,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { name },
-      select: { id: true, name: true, email: true, role: true } // Don't return the password
+      select: { id: true, name: true, email: true, role: true }
     });
 
     res.json({
