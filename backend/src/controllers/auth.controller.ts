@@ -11,7 +11,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
  * Register a new user and send verification email.
  */
 export const register = async (req: Request, res: Response) => {
-  let newUser; 
+  let newUser;
   try {
     const { email, password, name } = req.body;
 
@@ -37,28 +37,56 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    // 4. Send the verification email
-    await emailService.sendVerificationEmail(email, name, token);
+    // 4. Send the verification email (wrapped separately for clearer error logging)
+    try {
+      await emailService.sendVerificationEmail(email, name, token);
+    } catch (emailError: any) {
+      // Log the real SMTP error so you can see it in Render logs
+      console.error("❌ EMAIL SENDING FAILED:");
+      console.error("  Message:", emailError?.message);
+      console.error("  Code:", emailError?.code);
+      console.error("  Command:", emailError?.command);
+      console.error("  Full error:", JSON.stringify(emailError, null, 2));
 
-    res.status(201).json({ 
-      success: true, 
-      message: "Registration successful! Please check your email to verify your account." 
-    });
-  } catch (error) {
-    // IF EMAIL FAILS: Delete the user so they aren't stuck with a taken email but no verification
-    if (newUser) {
+      // Clean up: delete user so email isn't locked without verification
       await prisma.user.delete({ where: { id: newUser.id } });
+
+      return res.status(500).json({
+        success: false,
+        message: "Registration succeeded but verification email failed. Please try again later.",
+        // Only expose error details in development
+        ...(process.env.NODE_ENV !== 'production' && { debug: emailError?.message })
+      });
     }
-    
-    console.error("Registration Error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Could not send verification email. Please try again later." 
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful! Please check your email to verify your account."
+    });
+
+  } catch (error: any) {
+    // Catches DB errors, bcrypt errors, etc.
+    console.error("❌ REGISTRATION ERROR (non-email):");
+    console.error("  Message:", error?.message);
+    console.error("  Full error:", JSON.stringify(error, null, 2));
+
+    // Clean up user if it was created before the error
+    if (newUser) {
+      try {
+        await prisma.user.delete({ where: { id: newUser.id } });
+      } catch (deleteError) {
+        console.error("❌ Failed to clean up user after error:", deleteError);
+      }
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Registration failed. Please try again later."
     });
   }
 };
 
-//GET /api/auth/verify
+// GET /api/auth/verify
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
@@ -67,34 +95,32 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Verification token is missing." });
     }
 
-    // Find user with this token
-    const user = await prisma.user.findUnique({ 
-      where: { verificationToken: token as string } 
+    const user = await prisma.user.findUnique({
+      where: { verificationToken: token as string }
     });
 
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid or expired token." });
     }
 
-    // Update user status
     await prisma.user.update({
       where: { id: user.id },
-      data: { 
-        verified: true, 
-        verificationToken: null 
+      data: {
+        verified: true,
+        verificationToken: null
       },
     });
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "Email verified successfully!" 
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully!"
     });
 
   } catch (error) {
     console.error("Verification Error:", error);
-    return res.status(500).json({ 
-        success: false, 
-        message: "An error occurred during verification." 
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred during verification."
     });
   }
 };
@@ -110,7 +136,7 @@ export const login = async (req: Request, res: Response) => {
     console.log('Email:', email);
 
     const user = await prisma.user.findUnique({ where: { email } });
-    
+
     if (!user) {
       console.log('❌ User not found in DB');
       return res.status(401).json({ success: false, message: "Invalid email or password." });
@@ -124,33 +150,32 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    // Check if verified
     if (!user.verified) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Please verify your email address before logging in." 
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email address before logging in."
       });
     }
 
-    // Generate JWT
     const token = jwt.sign(
-      { id: user.id, role: user.role }, 
+      { id: user.id, role: user.role },
       process.env.JWT_SECRET || 'your_fallback_secret',
       { expiresIn: '24h' }
     );
 
-    res.json({ 
-      success: true, 
-      token, 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        role: user.role 
-      } 
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role
+      }
     });
+
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ success: false, error: "Login failed." });
+    return res.status(500).json({ success: false, error: "Login failed." });
   }
 };
 
@@ -172,13 +197,14 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
       select: { id: true, name: true, email: true, role: true }
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: "Profile updated successfully",
       user: updatedUser
     });
+
   } catch (error) {
     console.error("Update Error:", error);
-    res.status(500).json({ message: "Failed to update profile" });
+    return res.status(500).json({ message: "Failed to update profile" });
   }
 };
