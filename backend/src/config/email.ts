@@ -7,27 +7,28 @@ import {ContactEmailData } from '../types/index.js';
 class EmailConfig {
   private transporter: Transporter;
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // Must be true for port 465
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,
-      tls: {
-        // This is the critical fix for the ENETUNREACH error on Render
-        family: 4, 
-        // Prevents failure if the certificate name doesn't match perfectly
-        rejectUnauthorized: false 
-      },
-    } as any);
+  // config/email.ts
+constructor() {
+  this.transporter = nodemailer.createTransport({
+    host: '74.125.142.108', // This is the DIRECT IPv4 address for smtp.gmail.com
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER, // Ensure this is exactly SMTP_USER in Render
+      pass: process.env.SMTP_PASS, // Ensure this is exactly SMTP_PASS in Render
+    },
+    // This block is mandatory to stop the ENETUNREACH error
+    tls: {
+      family: 4,
+      servername: 'smtp.gmail.com', // Required because we used an IP for the host
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 20000, // Increase to 20 seconds for slow cloud starts
+    greetingTimeout: 20000,
+  } as any);
 
-    this.verifyConnection();
-  }
+  this.verifyConnection();
+}
 
   /**
    * Test SMTP connection
