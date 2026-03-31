@@ -11,7 +11,6 @@ import { AppError } from '../middleware/error.middleware';
 class ContactController {
   /**
    * POST /api/contact
-   * Submit contact form
    */
   async submit(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

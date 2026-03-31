@@ -11,7 +11,7 @@ export default function VerifyEmail() {
     const verify = async () => {
       try {
         // We manually call the BACKEND API here
-        const API_BASE = import.meta.env.VITE_API_URL; // e.g., http://localhost:5000/api
+        const API_BASE = import.meta.env.VITE_API_URL; 
         const res = await fetch(`${API_BASE}/auth/verify?token=${token}`);
         const data = await res.json();
 

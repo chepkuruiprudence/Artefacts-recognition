@@ -64,7 +64,7 @@ class ClassifyController {
           prediction: {
             name: topLabel,
             confidence: (classificationResult.topPrediction.confidence * 100).toFixed(2) + '%',
-            ...artefactInfo, // Now contains the AI-enhanced description
+            ...artefactInfo, 
           },
           alternatives: classificationResult.allPredictions
             .slice(1, 3)

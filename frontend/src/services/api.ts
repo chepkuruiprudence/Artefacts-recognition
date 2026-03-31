@@ -41,17 +41,13 @@ export const classifyArtefact = async (file: File): Promise<ClassificationData> 
   }
 };
 
-/**
- * Get classification history
- */
+//Get classification history
 export const getClassificationHistory = async () => {
   const { data } = await api.get<ApiResponse<any>>('/classify/history');
   return data.data;
 };
 
-/**
- * Get all artefacts
- */
+//Get all artefacts
 export const getArtefacts = async (filters?: {
   category?: string;
   search?: string;
@@ -68,9 +64,7 @@ export const getArtefacts = async (filters?: {
   return data.data;
 };
 
-/**
- * Submit contact form
- */
+// Submit contact form
 export const submitContact = async (formData: {
   name: string;
   email: string;

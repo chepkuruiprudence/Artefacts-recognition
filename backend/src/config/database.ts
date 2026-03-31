@@ -23,7 +23,7 @@ class Database {
 
       // 3. Initialize the client with the adapter
       Database.instance = new PrismaClient({
-        adapter, // This is the required field in Prisma 7
+        adapter, 
         log: process.env.NODE_ENV === 'development' 
           ? ['query', 'error', 'warn'] 
           : ['error'],
@@ -38,8 +38,6 @@ class Database {
   public static async testConnection(): Promise<void> {
     try {
       const prisma = Database.getInstance();
-      // In Prisma 7, $connect is often handled lazily by the adapter, 
-      // but calling a simple query is the best way to test the pool.
       await prisma.$queryRaw`SELECT 1`;
       console.log('✅ Database connected successfully');
     } catch (error) {

@@ -4,10 +4,6 @@ import { ArtefactCategory, VerificationStatus } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import { any } from '@tensorflow/tfjs-node';
 
-/**
- * Artefact Controller
- * Handles CRUD operations for artefacts
- */
 class ArtefactController {
   /**
    * GET /api/artefacts

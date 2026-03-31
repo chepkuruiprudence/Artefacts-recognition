@@ -9,7 +9,6 @@ import { AuthRequest } from '../middleware/auth.middleware';
 /**
  * POST /api/auth/register
  * Register a new user and send verification email.
- * Includes cleanup logic to delete user if email fails.
  */
 export const register = async (req: Request, res: Response) => {
   let newUser; 
@@ -39,7 +38,6 @@ export const register = async (req: Request, res: Response) => {
     });
 
     // 4. Send the verification email
-    // If this fails, the 'catch' block will trigger and delete the newUser
     await emailService.sendVerificationEmail(email, name, token);
 
     res.status(201).json({ 
@@ -60,11 +58,7 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * GET /api/auth/verify
- * Endpoint called when user clicks the link in their email.
- * Returns JSON for the React Frontend to process.
- */
+//GET /api/auth/verify
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
@@ -87,7 +81,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       where: { id: user.id },
       data: { 
         verified: true, 
-        verificationToken: null // Clear token after use
+        verificationToken: null 
       },
     });
 

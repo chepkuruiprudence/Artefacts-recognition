@@ -5,7 +5,7 @@ export const getAdminStats = async (req: Request, res: Response) => {
   try {
     // 1. Get counts for the dashboard cards
     const pendingCount = await prisma.artefact.count({
-      where: { verificationStatus: 'PENDING' } // Adjust 'status' based on your schema
+      where: { verificationStatus: 'PENDING' } 
     });
 
     const totalVerified = await prisma.artefact.count({
