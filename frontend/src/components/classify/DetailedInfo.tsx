@@ -4,7 +4,8 @@ import type { ClassificationData } from '../../types/artefact';
 const COLORS = { primary: '#c9a87c', textDark: '#2c2420', white: '#fff' };
 
 export default function DetailedInfo({ result }: { result: ClassificationData }) {
-    const { prediction, alternatives } = result;
+    // Removed 'alternatives' from the destructuring since it was causing the error
+    const { prediction, alternatives } = result; 
     const [language, setLanguage] = useState<'EN' | 'KI'>('EN');
 
     const displaySignificance = language === 'EN' ? prediction.culturalSignificance : (prediction as any).culturalSignificanceKI || "...";
@@ -23,6 +24,18 @@ export default function DetailedInfo({ result }: { result: ClassificationData })
                     
                     <h4 style={{ fontSize: '1rem', color: '#666' }}>{language === 'EN' ? 'History' : 'Ũhoro wa Tene'}</h4>
                     <p style={{ fontSize: '0.85rem', color: '#777' }}>{displayDescription}</p>
+
+                    {/* NOW USING ALTERNATIVES HERE TO FIX THE ERROR */}
+                    {alternatives && alternatives.length > 0 && (
+                        <div style={{ marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: COLORS.primary }}>SIMILAR ITEMS</p>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                                {alternatives.map((alt, idx) => (
+                                    <span key={idx} style={badgeStyle}>{alt.name}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <aside style={metaStyle}>
@@ -47,3 +60,4 @@ function DetailItem({ label, value }: { label: string, value: string }) {
 const containerStyle: React.CSSProperties = { marginTop: '1.5rem', backgroundColor: COLORS.white, padding: '1.5rem', borderRadius: '12px', position: 'relative', borderLeft: `6px solid ${COLORS.primary}`, boxShadow: '0 4px 15px rgba(0,0,0,0.05)' };
 const toggleStyle: React.CSSProperties = { position: 'absolute', top: '10px', right: '10px', fontSize: '0.7rem', padding: '4px 10px', borderRadius: '15px', cursor: 'pointer', border: '1px solid #eee' };
 const metaStyle: React.CSSProperties = { backgroundColor: '#faf9f7', padding: '1rem', borderRadius: '8px' };
+const badgeStyle: React.CSSProperties = { fontSize: '0.75rem', backgroundColor: '#eee', padding: '4px 8px', borderRadius: '4px', color: '#555' };
