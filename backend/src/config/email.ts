@@ -9,7 +9,7 @@ class EmailConfig {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: 'smtp.gmail.com',
       port: 465,
       secure: true, // Must be true for port 465
       auth: {
