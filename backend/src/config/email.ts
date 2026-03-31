@@ -8,18 +8,24 @@ class EmailConfig {
   private transporter: Transporter;
 
   constructor() {
-    // Create email transporter
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '465'),
-      secure: false,
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Must be true for port 465
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
-    });
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      tls: {
+        // This is the critical fix for the ENETUNREACH error on Render
+        family: 4, 
+        // Prevents failure if the certificate name doesn't match perfectly
+        rejectUnauthorized: false 
+      },
+    } as any);
 
-    // Verify connection
     this.verifyConnection();
   }
 
