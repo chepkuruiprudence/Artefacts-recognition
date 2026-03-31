@@ -1,38 +1,28 @@
 import nodemailer, { Transporter } from 'nodemailer';
-import {ContactEmailData } from '../types/index.js';
+import { ContactEmailData } from '../types/index.js';
 
-/**
- * Email Service Configuration
- */
 class EmailConfig {
   private transporter: Transporter;
 
-  // config/email.ts
-constructor() {
-  this.transporter = nodemailer.createTransport({
-    host: '74.125.142.108', // This is the DIRECT IPv4 address for smtp.gmail.com
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER, // Ensure this is exactly SMTP_USER in Render
-      pass: process.env.SMTP_PASS, // Ensure this is exactly SMTP_PASS in Render
-    },
-    // This block is mandatory to stop the ENETUNREACH error
-    tls: {
-      family: 4,
-      servername: 'smtp.gmail.com', // Required because we used an IP for the host
-      rejectUnauthorized: false
-    },
-    connectionTimeout: 20000, // Increase to 20 seconds for slow cloud starts
-    greetingTimeout: 20000,
-  } as any);
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,          // ✅ Use 587 (STARTTLS) — Render blocks 465
+      secure: false,      // ✅ false for 587, true only for 465
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 20000,
+      greetingTimeout: 20000,
+    });
 
-  this.verifyConnection();
-}
+    this.verifyConnection();
+  }
 
-  /**
-   * Test SMTP connection
-   */
   private async verifyConnection(): Promise<void> {
     try {
       await this.transporter.verify();
@@ -45,7 +35,7 @@ constructor() {
   async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const url = `${baseUrl}/auth/verify?token=${token}`;
-    
+
     const mailOptions = {
       from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,
       to: email,
@@ -72,9 +62,6 @@ constructor() {
     console.log('📧 Verification email sent to:', email);
   }
 
-  /**
-   * Send confirmation email to user
-   */
   async sendContactConfirmation(data: ContactEmailData): Promise<void> {
     const mailOptions = {
       from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,
@@ -102,9 +89,6 @@ constructor() {
     console.log('📧 Confirmation email sent to:', data.email);
   }
 
-  /**
-   * Send notification to admin
-   */
   async sendAdminNotification(data: ContactEmailData): Promise<void> {
     const mailOptions = {
       from: `"Ūgwati Contact Form" <${process.env.SMTP_USER}>`,
