@@ -90,38 +90,43 @@ export const register = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
+    const cleanToken = (token as string)?.trim(); // Remove any hidden spaces
 
-    if (!token) {
-      return res.status(400).json({ success: false, message: "Verification token is missing." });
+    if (!cleanToken) {
+      return res.status(400).json({ success: false, message: "Token missing." });
     }
 
+    console.log(`🔍 Attempting to verify token: ${cleanToken}`);
+
+    // Use findUnique since it IS unique in your schema
     const user = await prisma.user.findUnique({
-      where: { verificationToken: token as string }
+      where: { verificationToken: cleanToken }
     });
 
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token." });
+      console.error("❌ TOKEN NOT FOUND IN DB. Check if the user was deleted or token expired.");
+      return res.status(400).json({ success: false, message: "Invalid token." });
     }
 
-    await prisma.user.update({
+    // PERFORM THE UPDATE
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         verified: true,
-        verificationToken: null
+        verificationToken: null // This prevents the link from being used twice
       },
     });
 
+    console.log(`✅ SUCCESS: ${updatedUser.email} is now verified.`);
+
     return res.status(200).json({
       success: true,
-      message: "Email verified successfully!"
+      message: "Email verified! You can now log in."
     });
 
   } catch (error) {
-    console.error("Verification Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred during verification."
-    });
+    console.error("❌ DATABASE UPDATE ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error during verification." });
   }
 };
 
