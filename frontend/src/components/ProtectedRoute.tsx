@@ -11,5 +11,5 @@ export default function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />; // This renders the Admin Page if authorized
+  return <Outlet />;
 }

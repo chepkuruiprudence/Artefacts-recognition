@@ -2,8 +2,6 @@ import type { ClassificationResult } from '../types/artefact';
 
 interface ResultCardProps {
   result: ClassificationResult;
-  // Note: Your interface defines alternatives as an array of objects
-  // We will use those for the "Other Possibilities" section
 }
 
 export default function ResultCard({ result }: ResultCardProps) {
@@ -114,8 +112,6 @@ export default function ResultCard({ result }: ResultCardProps) {
         </div>
       </div>
 
-      {/* Since ClassificationResult (UI type) is separate from ArtefactDetails (Content type), 
-          ensure you are passing the correct description strings from your state logic */}
       <div style={{ padding: '1.5rem 2rem' }}>
         <p style={{
           fontFamily: '"EB Garamond", Georgia, serif',

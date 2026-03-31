@@ -4,9 +4,6 @@ import numpy as np
 import os
 from PIL import Image
 
-# =========================
-# CONFIG
-# =========================
 MODEL_PATH = "src/assets/model/kikuyu_culture_model.onnx"
 TEST_IMAGE = "src/assets/images/bottle.jpg"
 REPORT_FILE = "onnx_report.txt"

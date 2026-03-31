@@ -14,7 +14,7 @@ export default function ContributionForm() {
         era: '',
         description: '',
         culturalSignificance: '',
-        materials: '', // We will split this into an array on submit
+        materials: '',
     });
     const [images, setImages] = useState<FileList | null>(null);
     const [status, setStatus] = useState<{type: 'success' | 'error', msg: string} | null>(null);
@@ -46,7 +46,7 @@ export default function ContributionForm() {
         try {
             const response = await fetch(`${API_BASE}/artefacts`, {
                 method: 'POST',
-                body: data, // Note: Don't set Content-Type header when using FormData
+                body: data,
             });
 
             if (response.ok) {

@@ -156,7 +156,7 @@ export default function ImageUploader({ onImageSelected, isLoading }: ImageUploa
             color: 'rgba(196,140,60,0.6)',
             letterSpacing: '0.05em',
           }}>
-            or click to browse — JPG, PNG, WEBP supported
+            or click to browse JPG, PNG, JPEG, supported
           </p>
 
           <input
