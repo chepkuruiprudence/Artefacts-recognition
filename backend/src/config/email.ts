@@ -1,43 +1,23 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { ContactEmailData } from '../types/index.js';
 
 class EmailConfig {
-  private transporter: Transporter;
+  private resend: Resend;
+  private fromAddress: string;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,          // ✅ Use 587 (STARTTLS) — Render blocks 465
-      secure: false,      // ✅ false for 587, true only for 465
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 20000,
-      greetingTimeout: 20000,
-    });
-
-    this.verifyConnection();
-  }
-
-  private async verifyConnection(): Promise<void> {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email service ready');
-    } catch (error) {
-      console.error('❌ Email service error:', error);
-    }
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    // Use this default until you verify a domain on Resend
+    this.fromAddress = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+    console.log('✅ Email service (Resend) initialized');
   }
 
   async sendVerificationEmail(email: string, name: string, token: string): Promise<void> {
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const url = `${baseUrl}/auth/verify?token=${token}`;
 
-    const mailOptions = {
-      from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,
+    const { error } = await this.resend.emails.send({
+      from: `Ūgwati wa Gĩkũyũ <${this.fromAddress}>`,
       to: email,
       subject: 'Verify your Account - Ūgwati wa Gĩkũyũ',
       html: `
@@ -56,15 +36,19 @@ class EmailConfig {
           <p style="color: #8b6f47; font-size: 0.9rem; text-align: center;">Helping preserve the history of the Gĩkũyũ people.</p>
         </div>
       `,
-    };
+    });
 
-    await this.transporter.sendMail(mailOptions);
+    if (error) {
+      console.error('❌ Resend error (verification):', error);
+      throw new Error(`Could not send verification email. ${error.message}`);
+    }
+
     console.log('📧 Verification email sent to:', email);
   }
 
   async sendContactConfirmation(data: ContactEmailData): Promise<void> {
-    const mailOptions = {
-      from: `"Ūgwati wa Gĩkũyũ" <${process.env.SMTP_USER}>`,
+    const { error } = await this.resend.emails.send({
+      from: `Ūgwati wa Gĩkũyũ <${this.fromAddress}>`,
       to: data.email,
       subject: 'We received your message - Ūgwati wa Gĩkũyũ',
       html: `
@@ -83,16 +67,20 @@ class EmailConfig {
           <p style="color: #5a4a3a;">Best regards,<br>The Ūgwati wa Gĩkũyũ Team</p>
         </div>
       `,
-    };
+    });
 
-    await this.transporter.sendMail(mailOptions);
+    if (error) {
+      console.error('❌ Resend error (contact confirmation):', error);
+      throw new Error(`Could not send confirmation email. ${error.message}`);
+    }
+
     console.log('📧 Confirmation email sent to:', data.email);
   }
 
   async sendAdminNotification(data: ContactEmailData): Promise<void> {
-    const mailOptions = {
-      from: `"Ūgwati Contact Form" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
+    const { error } = await this.resend.emails.send({
+      from: `Ūgwati Contact Form <${this.fromAddress}>`,
+      to: process.env.ADMIN_EMAIL || this.fromAddress,
       subject: `New Contact Form Submission - ${data.subject}`,
       html: `
         <h2>New Contact Form Submission</h2>
@@ -103,9 +91,13 @@ class EmailConfig {
         <p style="white-space: pre-wrap;">${data.message}</p>
         <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
       `,
-    };
+    });
 
-    await this.transporter.sendMail(mailOptions);
+    if (error) {
+      console.error('❌ Resend error (admin notification):', error);
+      throw new Error(`Could not send admin notification. ${error.message}`);
+    }
+
     console.log('📧 Admin notification sent');
   }
 }
