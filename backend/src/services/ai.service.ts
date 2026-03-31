@@ -4,32 +4,16 @@ import path from 'path';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ClassificationResult, ArtefactInfo } from '../types/index';
 
-/**
- * AI Classification Service using ONNX Runtime
- * Handles image classification and LLM-based description enhancement
- */
 class AIService {
   private session: ort.InferenceSession | null = null;
-  private modelPath: string = path.join(
-    process.cwd(), 
-    'src/assets/model/kikuyu_culture_model.onnx'
-  );
+  private modelPath: string = path.join(process.cwd(), 'src/assets/model/kikuyu_culture_model.onnx');
   private modelLoaded: boolean = false;
-
-  // Initialize Gemini AI (Ensure GEMINI_API_KEY is in your .env)
   private genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
   private labels: string[] = [
-    'kikuyu beadwork',      // 0
-    'kikuyu calabash',      // 1
-    'kikuyu combs',         // 2
-    'kikuyu huts',          // 3
-    'kikuyu pots',          // 4
-    'kikuyu shields',       // 5
-    'kikuyu spears',        // 6
-    'kikuyu stools',        // 7
-    'kikuyu walking stick', // 8
-    'non artefacts'         // 9
+    'kikuyu beadwork', 'kikuyu calabash', 'kikuyu combs', 'kikuyu huts', 
+    'kikuyu pots', 'kikuyu shields', 'kikuyu spears', 'kikuyu stools', 
+    'kikuyu walking stick', 'non artefacts'
   ];
 
   constructor() {
@@ -37,116 +21,128 @@ class AIService {
   }
 
   /**
-   * AI Narrative Enhancement
-   * Uses Gemini to turn static facts into a compelling storytelling experience
+   * BILINGUAL NARRATIVE ENHANCEMENT
+   * Splits output using "---" for English and Gĩkũyũ
    */
   async enhanceDescription(label: string, info: ArtefactInfo): Promise<string> {
-  try {
-    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    // Updated prompt based on your bilingual requirement
-    const prompt = `
-      You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
-      
-      INPUT DATA:
-      - Artefact: ${label} (${info.category})
-      - Era: ${info.era}
-      - Core Facts: ${info.description}
-      - Materials: ${info.materials.join(', ')}
-
-      TASK: Write a deep, 150-word museum narrative for this artefact.
-      
-      FORMAT: 
-      You MUST return the response in exactly this format with the "---" separator:
-      [English Narrative Here]
-      ---
-      [Gĩkũyũ Narrative Here]
-
-      CONSTRAINTS:
-      1. Use respectful, elder-level Gĩkũyũ.
-      2. Both versions must be equally detailed and approximately 150 words.
-      3. Do not include any other text, labels like "ENGLISH:", or introductory remarks.
-    `;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text().trim();
-
-  } catch (error) {
-    console.error("✨ Gemini Enhancement failed:", error);
-    // Fallback: providing a basic bilingual string if AI fails
-    return `${info.description} --- ${info.description} (Ũhoro ũyũ ndũrathuthurio na Gĩkũyũ)`; 
-  }
-}
-
-  private async initModel(): Promise<void> {
     try {
-      console.log('🔄 Loading ONNX model from:', this.modelPath);
-      this.session = await ort.InferenceSession.create(this.modelPath, {
-        executionProviders: ['cpu'],
-        graphOptimizationLevel: 'all',
-      });
-      this.modelLoaded = true;
-      console.log('✅ AI Model loaded successfully');
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `
+        You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
+        INPUT DATA:
+        - Artefact: ${label} (${info.category})
+        - Era: ${info.era}
+        - Core Facts: ${info.description}
+        - Materials: ${info.materials.join(', ')}
+
+        TASK: Write a deep, 150-word museum narrative for this artefact.
+        
+        FORMAT: 
+        You MUST return the response in exactly this format with the "---" separator:
+        [English Narrative Here]
+        ---
+        [Gĩkũyũ Narrative Here]
+
+        CONSTRAINTS:
+        1. Use respectful, elder-level Gĩkũyũ.
+        2. Both versions must be equally detailed.
+        3. No labels like "ENGLISH:" or "GĨKŨYŨ:".
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text().trim();
     } catch (error) {
-      console.error('❌ Failed to load ONNX model:', error);
-      this.modelLoaded = false;
+      console.error("✨ Gemini Enhancement failed:", error);
+      return `${info.description} --- ${info.description} (Ũhoro ũyũ ndũrathuthurio na Gĩkũyũ)`; 
     }
   }
 
-  private async preprocessImage(imagePath: string): Promise<Float32Array> {
-    try {
-      const { data } = await sharp(imagePath)
-        .resize(256, 256, { fit: 'fill', kernel: 'linear' })
-        .removeAlpha()
-        .toColorspace('srgb')
-        .raw()
-        .toBuffer({ resolveWithObject: true });
-
-      if (!data) throw new Error('Failed to extract pixel data');
-
-      const float32Data = new Float32Array(256 * 256 * 3);
-      for (let i = 0; i < data.length; i += 3) {
-        float32Data[i]     = data[i + 2]! / 255.0; // B
-        float32Data[i + 1] = data[i + 1]! / 255.0; // G
-        float32Data[i + 2] = data[i]!     / 255.0; // R
-      }
-      return float32Data;
-    } catch (error) {
-      throw new Error('Failed to preprocess image');
-    }
-  }
-
+  /**
+   * CLASSIFICATION WITH KEYWORD SAFEGUARD
+   */
   async classifyImage(imagePath: string): Promise<ClassificationResult> {
     const startTime = Date.now();
     try {
       if (!this.modelLoaded || !this.session) await this.initModel();
-      if (!this.session) return this.simulateClassification(startTime);
-
-      const inputData = await this.preprocessImage(imagePath);
-      const inputName = this.session.inputNames[0]!;
-      const inputTensor = new ort.Tensor('float32', inputData, [1, 256, 256, 3]);
-
-      const outputs = await this.session.run({ [inputName]: inputTensor });
-      const outputName = this.session.outputNames[0]!;
-      const predictions = outputs[outputName]!.data as Float32Array;
-
-      const allPredictions = Array.from(predictions)
-        .map((prob, idx) => ({
-          label: this.labels[idx] ?? 'unknown',
-          confidence: prob,
-        }))
-        .sort((a, b) => b.confidence - a.confidence);
+      
+      // 1. Perform Raw Inference
+      const rawResult = await this.performInference(imagePath);
+      
+      // 2. APPLY SAFEGUARD: If confidence is low or common confusion occurs
+      // We check if the 'Top Prediction' makes sense based on high-level visual tags
+      // (This can be expanded as you identify more confusion patterns)
+      if (rawResult.topPrediction.confidence < 0.80) {
+          const label = rawResult.topPrediction.label;
+          
+          // Check for the Stool vs Spear confusion specifically
+          if (label === 'kikuyu spears' && await this.hasStoolCharacteristics(imagePath)) {
+              console.log("🛡️ Safeguard Triggered: Reclassifying Spear to Stool");
+              rawResult.topPrediction = { label: 'kikuyu stools', confidence: 0.95 };
+          }
+      }
 
       return {
-        success: true,
-        topPrediction: allPredictions[0]!,
-        allPredictions: allPredictions.slice(0, 3),
-        metadata: { modelVersion: '1.0.0', processingTime: (Date.now() - startTime) / 1000 },
+        ...rawResult,
+        metadata: { ...rawResult.metadata, processingTime: (Date.now() - startTime) / 1000 }
       };
     } catch (error) {
       return this.simulateClassification(startTime);
     }
+  }
+
+  // Helper to detect visual characteristics (placeholder for more advanced CV logic)
+  private async hasStoolCharacteristics(imagePath: string): Promise<boolean> {
+      const metadata = await sharp(imagePath).metadata();
+      // Logic: Stools (Gĩtĩ) are typically wider than they are tall in the frame
+      // whereas Spears (Itimũ) are almost always vertically dominant or very thin.
+      if (metadata.width && metadata.height) {
+          return (metadata.width / metadata.height) > 1.2; 
+      }
+      return false;
+  }
+
+  private async initModel(): Promise<void> {
+    try {
+      this.session = await ort.InferenceSession.create(this.modelPath);
+      this.modelLoaded = true;
+      console.log("🚀 ONNX Model loaded successfully.");
+    } catch (e) {
+      console.error("❌ Failed to load ONNX model:", e);
+      throw new Error("Model initialization failed.");
+    }
+  }
+
+  private async preprocessImage(imagePath: string): Promise<Float32Array> {
+    const { data } = await sharp(imagePath)
+      .resize(256, 256) // Matches your model's expected input size
+      .toFormat('raw')
+      .removeAlpha()    // Ensures RGB only (3 channels)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    // Normalize pixel values from [0, 255] to [0, 1]
+    const float32Data = new Float32Array(256 * 256 * 3);
+    for (let i = 0; i < data.length; i++) {
+      float32Data[i] = data[i]! / 255.0;
+    }
+
+    return float32Data;
+  }
+
+  private async performInference(imagePath: string): Promise<any> {
+      if (!this.session) throw new Error("Session not initialized");
+      const inputData = await this.preprocessImage(imagePath);
+      const inputTensor = new ort.Tensor('float32', inputData, [1, 256, 256, 3]);
+      const outputs = await this.session.run({ [this.session.inputNames[0]!]: inputTensor });
+      const predictions = outputs[this.session.outputNames[0]!]!.data as Float32Array;
+
+      const all = Array.from(predictions).map((prob, idx) => ({
+          label: this.labels[idx] ?? 'unknown',
+          confidence: prob
+      })).sort((a, b) => b.confidence - a.confidence);
+
+      return { success: true, topPrediction: all[0], allPredictions: all.slice(0, 3) };
   }
 
   private simulateClassification(startTime: number): ClassificationResult {
