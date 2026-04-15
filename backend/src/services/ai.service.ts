@@ -27,7 +27,7 @@ class AIService {
   async enhanceDescription(label: string, info: ArtefactInfo): Promise<string> {
     try {
       const model = this.genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
     });
       const prompt = `
         You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
