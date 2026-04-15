@@ -30,26 +30,28 @@ class AIService {
       model: "gemini-2.5-flash",
     });
       const prompt = `
-        You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
-        INPUT DATA:
-        - Artefact: ${label} (${info.category})
-        - Era: ${info.era}
-        - Core Facts: ${info.description}
-        - Materials: ${info.materials.join(', ')}
+  You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
+  INPUT DATA:
+  - Artefact: ${label} (${info.category})
+  - Era: ${info.era}
+  - Core Facts: ${info.description}
+  - Materials: ${info.materials.join(', ')}
 
-        TASK: Write a deep, 150-word museum narrative for this artefact.
-        
-        FORMAT: 
-        You MUST return the response in exactly this format with the "---" separator:
-        [English Narrative Here]
-        ---
-        [Gĩkũyũ Narrative Here]
+  TASK: Write a deep museum narrative split into English and Gĩkũyũ.
+  
+  FORMAT: 
+  You MUST return the response in exactly this format with the "---" separator:
+  [English Narrative]
+  ---
+  [Gĩkũyũ General Description for Ũtari section]
+  ---
+  [Gĩkũyũ Historical Significance for Ũhoro wa Tene section]
 
-        CONSTRAINTS:
-        1. Use respectful, elder-level Gĩkũyũ.
-        2. Both versions must be equally detailed.
-        3. No labels like "ENGLISH:" or "GĨKŨYŨ:".
-      `;
+  CONSTRAINTS:
+  1. Use respectful, elder-level Gĩkũyũ.
+  2. No labels like "ENGLISH:" or "GĨKŨYŨ:".
+  3. Ensure the two Gĩkũyũ sections are distinct.
+`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

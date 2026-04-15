@@ -57,7 +57,8 @@ export default function Classify() {
                 <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
-                    gap: '1.5rem' 
+                    gap: '1.5rem',
+                    alignItems: 'start' // Ensures cards don't stretch weirdly
                 }}>
                     {/* Input Card */}
                     <section style={smallCard}>
@@ -85,7 +86,17 @@ export default function Classify() {
                     <section style={smallCard}>
                         {selectedImage ? (
                             <div style={{ textAlign: 'center' }}>
-                                <img src={selectedImage} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: isMobile ? '250px' : '180px', objectFit: 'cover' }} />
+                                <img 
+                                    src={selectedImage} 
+                                    alt="Preview" 
+                                    style={{ 
+                                        width: '100%', 
+                                        borderRadius: '8px', 
+                                        maxHeight: '300px', // Increased slightly for better visibility
+                                        objectFit: 'contain', // Changed from 'cover' to prevent cutting
+                                        backgroundColor: '#f9f9f9' // Light backdrop for transparent/small images
+                                    }} 
+                                />
                                 {result && !isAnalyzing && <QuickResult result={result} />}
                             </div>
                         ) : (
@@ -100,7 +111,17 @@ export default function Classify() {
     );
 }
 
-const smallCard: React.CSSProperties = { backgroundColor: COLORS.white, borderRadius: '12px', padding: '1rem', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' };
+const smallCard: React.CSSProperties = { 
+    backgroundColor: COLORS.white, 
+    borderRadius: '12px', 
+    padding: '1rem', 
+    boxShadow: '0 2px 10px rgba(0,0,0,0.05)', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    justifyContent: 'center',
+    minHeight: '220px' // Ensures consistent card height
+};
+
 const uploadArea: React.CSSProperties = { border: `1px dashed ${COLORS.primary}`, borderRadius: '8px', padding: '1.5rem', textAlign: 'center', cursor: 'pointer' };
 const btnPrimary: React.CSSProperties = { marginTop: '10px', padding: '10px', backgroundColor: COLORS.primary, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' };
 const btnSecondary: React.CSSProperties = { marginTop: '10px', padding: '8px', backgroundColor: '#eee', border: 'none', borderRadius: '6px', fontSize: '0.8rem' };
