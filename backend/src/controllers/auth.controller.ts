@@ -88,48 +88,59 @@ export const register = async (req: Request, res: Response) => {
 
 // GET /api/auth/verify
 export const verifyEmail = async (req: Request, res: Response) => {
+  console.log("🚀 VERIFY ROUTE HIT");
+
   try {
     const { token } = req.query;
-    const cleanToken = (token as string)?.trim(); // Remove any hidden spaces
+
+    console.log("📩 RAW TOKEN:", token);
+
+    const cleanToken = (token as string)?.trim();
+
+    console.log("🧹 CLEAN TOKEN:", cleanToken);
 
     if (!cleanToken) {
+      console.log("❌ NO TOKEN PROVIDED");
       return res.status(400).json({ success: false, message: "Token missing." });
     }
 
-    console.log(`🔍 Attempting to verify token: ${cleanToken}`);
+    console.log(`🔍 Searching for token in DB...`);
 
-    // Use findUnique since it IS unique in your schema
     const user = await prisma.user.findUnique({
       where: { verificationToken: cleanToken }
     });
 
     if (!user) {
-      console.error("❌ TOKEN NOT FOUND IN DB. Check if the user was deleted or token expired.");
+      console.error("❌ TOKEN NOT FOUND IN DB");
       return res.status(400).json({ success: false, message: "Invalid token." });
     }
 
-    // PERFORM THE UPDATE
+    console.log("👤 USER FOUND:", user.email);
+    console.log("📌 CURRENT VERIFIED STATUS:", user.verified);
+
+    // 🔥 IMPORTANT: update user
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        verified: true,
-        verificationToken: null // This prevents the link from being used twice
+        verified: true,          // ⚠️ NOTE THIS FIELD
+        verificationToken: null
       },
     });
 
-    console.log(`✅ SUCCESS: ${updatedUser.email} is now verified.`);
+    console.log("✅ USER VERIFIED SUCCESSFULLY");
+    console.log("📌 NEW VERIFIED STATUS:", updatedUser.verified);
 
-    return res.status(200).json({
-      success: true,
-      message: "Email verified! You can now log in."
-    });
+    // ⚠️ Better than JSON → redirect so frontend behaves correctly
+    return res.redirect("http://localhost:3000/login?verified=true");
 
   } catch (error) {
-    console.error("❌ DATABASE UPDATE ERROR:", error);
-    return res.status(500).json({ success: false, message: "Server error during verification." });
+    console.error("❌ VERIFICATION ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during verification."
+    });
   }
 };
-
 /**
  * POST /api/auth/login
  * Authenticate user and return JWT
