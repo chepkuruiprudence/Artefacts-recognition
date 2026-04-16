@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { UserRole } from '@prisma/client';
 
 // 1. Manually point to the root .env
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -33,14 +34,14 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: 'chepkuruiprudence403@gmail.com' },
     update: {
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
       password: hashedPassword // Update password too in case it changed
     },
     create: {
       email: 'chepkuruiprudence403@gmail.com',
       name: 'Admin Elder',
       password: hashedPassword,
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
     },
   });
 
