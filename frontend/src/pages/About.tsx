@@ -133,7 +133,7 @@ export default function About() {
                         fontSize: '1rem'
                     }}>
                         <p style={{ marginBottom: '1.5rem' }}>
-                            Ūgwati wa Gĩkũyũ was born from a simple observation: many cultural 
+                            Ũtugi wa Agĩkũyũ was born from a simple observation: many cultural 
                             artefacts and their stories were being lost to time. Younger generations 
                             were disconnected from the rich heritage of their ancestors.
                         </p>

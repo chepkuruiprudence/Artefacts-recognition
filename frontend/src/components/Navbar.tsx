@@ -31,7 +31,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="nav-container">
         {/* Logo */}
-        <a href="/" className="logo">Ūgwati wa Gĩkũyũ</a>
+        <a href="/" className="logo">Ũtugi wa Agĩkũyũ</a>
 
         {/* Hamburger Toggle */}
         <button className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>

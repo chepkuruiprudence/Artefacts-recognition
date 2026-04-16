@@ -82,7 +82,7 @@ class Server {
     // Basic root route to prevent 404 when visiting the base Render URL
     this.app.get('/', (req: Request, res: Response) => {
       res.json({ 
-        message: "Ūgwati wa Gĩkũyũ API is Live", 
+        message: "Ũtugi wa Agĩkũyũ API is Live", 
         env: process.env.NODE_ENV || 'development' 
       });
     });
