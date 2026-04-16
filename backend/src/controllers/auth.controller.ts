@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         verificationToken: token,
         role: 'USER',
-        verified: false
+        verified: true
       },
     });
 
