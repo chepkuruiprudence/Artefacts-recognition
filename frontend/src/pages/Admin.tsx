@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Navbar from "../components/Navbar";
+import jsPDF from 'jspdf';
+import { FaDownload } from "react-icons/fa";
 
 export default function Admin() {
   const [data, setData] = useState<any>(null);
@@ -28,6 +30,34 @@ export default function Admin() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const downloadReport = () => {
+  if (!report) return;
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("Artefacts System Report", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Total Artefacts: ${report.summary.total}`, 20, 40);
+  doc.text(`Verified: ${report.summary.verified}`, 20, 50);
+  doc.text(`Pending: ${report.summary.pending}`, 20, 60);
+
+  doc.text("Top Contributors:", 20, 80);
+
+  let y = 90;
+  report.topContributors.forEach((user: any, index: number) => {
+    doc.text(
+      `${index + 1}. ${user.name} - ${user._count.artefacts} contributions`,
+      20,
+      y
+    );
+    y += 10;
+  });
+
+  doc.save("report.pdf");
+};
 
   const handleVerify = async (id: string) => {
     try {
@@ -142,6 +172,9 @@ export default function Admin() {
             {/* 📊 REPORT DISPLAY */}
             {report && (
               <section style={reportSection}>
+               <button onClick={downloadReport} style={primaryBtn}>
+  <FaDownload /> Download Report
+</button>
                 <h2>System Report</h2>
 
                 <p><strong>Total Artefacts:</strong> {report.summary.total}</p>
