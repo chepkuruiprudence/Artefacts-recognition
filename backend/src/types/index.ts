@@ -30,6 +30,8 @@ export interface ArtefactInfo {
   description: string;
   culturalSignificance: string;
   materials: string[];
+  gikuyuDescription?: string;
+  gikuyuHistory?: string;
 }
 
 // API Response wrapper
