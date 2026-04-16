@@ -39,14 +39,11 @@ class ClassifyController {
       if (topLabel !== 'non artefacts') {
         console.log(`✨ Enhancing description for: ${topLabel}`);
         const enhancedDescription = await aiService.enhanceDescription(
-  topLabel,
-  artefactInfo
-);
-
+          topLabel,
+          artefactInfo
+        );
         // Overwrite the static description with the AI-beautified one
-       artefactInfo.description = enhancedDescription.english;
-artefactInfo.gikuyuDescription = enhancedDescription.gikuyuDescription;
-artefactInfo.gikuyuHistory = enhancedDescription.gikuyuHistory;
+        artefactInfo.description = enhancedDescription;
       }
 
       // 4. Save to database for history/analytics
