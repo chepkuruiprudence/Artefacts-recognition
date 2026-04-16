@@ -7,7 +7,7 @@ const router = express.Router();
 // Only Admins can hit this route
 router.get('/stats', authenticate, getAdminStats);
 
-router.patch('/admin/verify/:id', verifyArtefact);
+router.patch('/verify/:id', verifyArtefact);
 
-router.get('/admin/report', getReport);
+router.get('/report', getReport);
 export default router;
