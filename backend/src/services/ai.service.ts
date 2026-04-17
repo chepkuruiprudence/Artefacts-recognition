@@ -24,32 +24,43 @@ class AIService {
    * BILINGUAL NARRATIVE ENHANCEMENT
    * Splits output using "---" for English and Gĩkũyũ
    */
-  async enhanceDescription(label: string, info: ArtefactInfo): Promise<any> {
-  try {
-    const model = this.genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", // Use 1.5 or 2.0, 2.5 doesn't exist yet
+  async enhanceDescription(label: string, info: ArtefactInfo): Promise<string> {
+    try {
+      const model = this.genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
     });
+      const prompt = `
+  You are an expert Gĩkũyũ Cultural Anthropologist and Master Curator.
+  INPUT DATA:
+  - Artefact: ${label} (${info.category})
+  - Era: ${info.era}
+  - Core Facts: ${info.description}
+  - Materials: ${info.materials.join(', ')}
 
-    const prompt = `... your prompt ...`;
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+  TASK: Write a deep museum narrative split into English and Gĩkũyũ.
+  
+  FORMAT: 
+  You MUST return the response in exactly this format with the "---" separator:
+  [English Narrative]
+  ---
+  [Gĩkũyũ General Description for Ũtari section]
+  ---
+  [Gĩkũyũ Historical Significance for Ũhoro wa Tene section]
 
-    // ✂️ SPLIT THE STRING
-    const parts = text.split('---').map(p => p.trim());
+  CONSTRAINTS:
+  1. Use respectful, elder-level Gĩkũyũ.
+  2. No labels like "ENGLISH:" or "GĨKŨYŨ:".
+  3. Ensure the two Gĩkũyũ sections are distinct.
+`;
 
-    return {
-      englishNarrative: parts[0] || info.description,
-      gikuyuDescription: parts[1] || "Ũhoro ũyũ ndũrathuthurio.",
-      gikuyuHistory: parts[2] || "Mĩthĩrĩko ya tene ndĩraoneka."
-    };
-  } catch (error) {
-    return {
-      englishNarrative: info.description,
-      gikuyuDescription: info.description,
-      gikuyuHistory: ""
-    };
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text().trim();
+    } catch (error) {
+      console.error("✨ Gemini Enhancement failed:", error);
+      return `${info.description} --- ${info.description} (Ũhoro ũyũ ndũrathuthurio na Gĩkũyũ)`; 
+    }
   }
-}
 
   /**
    * CLASSIFICATION WITH KEYWORD SAFEGUARD
