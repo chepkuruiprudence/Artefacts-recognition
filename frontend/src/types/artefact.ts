@@ -17,6 +17,7 @@ export interface ClassificationData {
     materials: string[];
   };
   alternatives: Array<{
+    label: ReactNode;
     name: string;
     confidence: string;
   }>;
