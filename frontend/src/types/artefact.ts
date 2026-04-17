@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 // Backend API Response wrapper
 export interface ApiResponse<T> {
   success: boolean;
